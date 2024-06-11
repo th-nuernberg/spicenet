@@ -4,15 +4,6 @@ from typing import Optional, Self
 import numpy as np
 
 
-def update_neighbor(current_learning_rate, dampening, distances, node):
-    node.preferred_value += current_learning_rate * distances[node] * dampening
-    node.tuning_curve_width += dampening
-
-
-def spice_net_som_activation():
-    return (1 / (math.sqrt(2 * math.pi) * 3)) * np.exp(-np.square(np.array(range(-5, 5))))
-
-
 class SpiceNetSom:
     """
     This self organizing map implementation is specifically for SpiceNet. It creates a 1D som.
@@ -20,6 +11,12 @@ class SpiceNetSom:
     """
 
     def __init__(self, nodes: int, value_range_start: float, value_range_end: float):
+        """
+        Creates a SpiceNetSom with nodes equally distributed across the specified value range.
+        :param nodes: The number of nodes that should be created.
+        :param value_range_start: Start of the value range.
+        :param value_range_end: End of the value range.
+        """
         distance = value_range_end - value_range_start
         step_size = distance / nodes
 
@@ -35,71 +32,63 @@ class SpiceNetSom:
             self.__nodes.append(new_node)
             previous = new_node
             pos += step_size
-        self.__matrix = np.array([[node.preferred_value for node in self.__nodes],
-                                  [node.tuning_curve_width for node in self.__nodes]]).transpose()
 
     def print_nodes(self):
         for node in self.__nodes:
             print(node)
 
     def fit(self, values: list[float]):
+        sigma_step_size = (len(values) / 2 - 1) / len(values)
+        current_sigma = len(values) / 2
         for i in range(len(values)):
             current_learning_rate = 1 - i / len(values)
+            current_sigma = len(values) / 2
 
-            closest_node, distances = self.__get_closest_node_and_distances(values[i])
-            closest_node.preferred_value += current_learning_rate * distances[closest_node]
-            closest_node.tuning_curve_width += 1
+            winning_node_index, _ = self.__argmax_node_activation(values[i])
 
-            node = closest_node.next
-            dampening = 1
-            while node is not None:
-                dampening /= 2
-                update_neighbor(current_learning_rate, dampening, distances, node)
-                node = node.next
+            for j in range(len(self.__nodes)):
+                self.__nodes[j].update(values[i], current_learning_rate, 1, j - winning_node_index)
 
-            node = closest_node.previous
-            dampening = 1
-            while node is not None:
-                dampening /= 2
-                update_neighbor(current_learning_rate, dampening, distances, node)
-                node = node.previous
-        self.__matrix = np.array([[node.preferred_value for node in self.__nodes],
-                                  [node.tuning_curve_width for node in self.__nodes]]).transpose()
+            current_sigma -= sigma_step_size
 
     def get_as_matrix(self) -> np.ndarray:
         """
-        Returns all nodes like a table with column
-        :return:
+        Returns all nodes like a table with column 0 representing the preferred value
+        and column 1 representing the tuning curve width.
+        :return: A numpy matrix.
         """
-        return self.__matrix
+        return np.array([[node.preferred_value for node in self.__nodes],
+                         [node.tuning_curve_width for node in self.__nodes]]).transpose()
 
-    def __get_closest_node_and_distances(self, value: float):
-        result = self.__nodes[0]
-        min_distance = abs(value - self.__nodes[0].preferred_value)
-        distances = {self.__nodes[0]: value - self.__nodes[0].preferred_value}
+    def calculate_activation_values(self, values: list[float]):
+        activation_values = np.array([node.activation_for_values(values) for node in self.__nodes])
+        return np.concatenate((
+            np.array(
+                [[node.preferred_value for node in self.__nodes],
+                 [node.tuning_curve_width for node in self.__nodes]]).transpose(),
+            activation_values),
+            axis=1)
+
+    def __argmax_node_activation(self, value: float):
+        """
+        Calculates the node with the highest activation value.
+        :param value: The value for wich the activation values should be calculated.
+        :return: The index of the winning node
+        and a dictionary containing all nodes with the calculated activation values.
+        """
+        winning_node_index: int = 0
+        max_activation = self.__nodes[0].activation_for_value(value)
+        activation_dict = {self.__nodes[0]: max_activation}
 
         for i in range(1, len(self.__nodes)):
-            new_distance = value - self.__nodes[i].preferred_value
-            distances[self.__nodes[i]] = value - self.__nodes[i].preferred_value
-            new_distance = abs(new_distance)
-            if new_distance < min_distance:
-                min_distance = new_distance
-                result = self.__nodes[i]
-        return result, distances
+            new_activation = self.__nodes[i].activation_for_value(value)
+            # add new value to a dictionary so the activations only have to be calculated a single time
+            activation_dict[self.__nodes[i]] = new_activation
 
-    def __get_activation_and_argmax(self, value: float):
-        result = self.__nodes[0]
-        min_distance = abs(value - self.__nodes[0].preferred_value)
-        distances = {self.__nodes[0]: value - self.__nodes[0].preferred_value}
-
-        for i in range(1, len(self.__nodes)):
-            new_distance = value - self.__nodes[i].preferred_value
-            distances[self.__nodes[i]] = value - self.__nodes[i].preferred_value
-            new_distance = abs(new_distance)
-            if new_distance < min_distance:
-                min_distance = new_distance
-                result = self.__nodes[i]
-        return result, distances
+            if new_activation > max_activation:
+                max_activation = new_activation
+                winning_node_index = i
+        return winning_node_index, activation_dict
 
     class __SomNode:
         """
@@ -108,10 +97,11 @@ class SpiceNetSom:
 
         def __init__(self,
                      preferred_value: float,
-                     tuning_curve_width: float = 1):
+                     tuning_curve_width: float = 0.001):
             """
             Creates a som node.
-            :param preferred_value: The "expected value" of the Normal distribution representing the activation function.
+            :param preferred_value: The "expected value" of the Normal distribution
+            representing the activation function.
             :param tuning_curve_width: The width of the tuning curve (the Normal distribution).
             """
             self.preferred_value = preferred_value
@@ -128,3 +118,43 @@ class SpiceNetSom:
             next_str = 'None' if self.next is None else self.next.preferred_value
             return (f'SomeNode: preferred_value={self.preferred_value}, tuning_curve_width={self.tuning_curve_width}, '
                     f'previous={previous_str}, next={next_str}')
+
+        def activation_for_value(self, value: float):
+            """
+            Returns the activation value of the node.
+            :param value: The value for wich the activation has to be calculated.
+            :return: The "height" of the tuning curve at the position of the value.
+            """
+            return (
+                    (1.0 / (math.sqrt(2.0 * math.pi) * self.tuning_curve_width))
+                    *
+                    math.exp(
+                        (-(value - self.preferred_value) ** 2) /
+                        (2.0 * self.tuning_curve_width ** 2))
+            )
+
+        def activation_for_values(self, values: list[float]):
+            """
+            Returns the activation values for a list of values.
+            :param values: The values for wich the activation has to be calculated.
+            :return: An array of activation values, ordered like the input list.
+            """
+            return np.array([self.activation_for_value(value) for value in values])
+
+        def update(self, value: float, learn_rate: float, sigma: float, distance_to_winner: int):
+            """
+            Updates the weights of the nodes.
+            :param value: The value in wich "direction" the node should move.
+            :param learn_rate: The learn rate. (This value should be depending on the iteration.)
+            :param sigma: The sigma of the interaction kernel. (This value should be depending on the iteration.)
+            :param distance_to_winner: The distance between this node and the winning node, in the SOM.
+            Here are not the weights / postions in the value range relevant.
+            (N1 weight: 31.9) --- (N2 weight: 32) --- (N3 weight: 32.4) --- (N4 weight: 33)
+            The Distance of N4 to N1 is 3
+            :return:
+            """
+            interaction_kernel_value = math.exp((-abs(distance_to_winner) ** 2) / (2 * sigma ** 2))
+            self.preferred_value += learn_rate * interaction_kernel_value * (value - self.preferred_value)
+            self.tuning_curve_width += learn_rate * interaction_kernel_value * (
+                    (value - self.preferred_value) ** 2 - self.tuning_curve_width ** 2
+            )
