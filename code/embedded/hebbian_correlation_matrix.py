@@ -13,6 +13,10 @@ class HebbianCorrelationMatrix:
         self.__som_2 = som_2
 
     def get_matrix(self) -> np.ndarray:
+        """
+        Get the weight matrix.
+        :return: The matrix dimension 1 is the first som given to the constructor.
+        """
         return self.__weights
 
     def fit(self, values_som_1: list[float], values_som_2: list[float], iteration: int):
@@ -21,11 +25,10 @@ class HebbianCorrelationMatrix:
         k = float(iteration)
         for i in range(len(values_som_1)):
             k += 1.0
+
             winner_som_1, activation_1 = self.__som_1.get_winning_neuron_index(values_som_1[i])
             winner_som_2, activation_2 = self.__som_2.get_winning_neuron_index(values_som_2[i])
 
-            fu_1 = (1.0 - learning_rate_2) * self.__activation_bar_1[winner_som_1] * (k - 1.0)
-            fu_2 = learning_rate_2 * activation_1
             self.__activation_bar_1[winner_som_1] = ((1.0 - learning_rate_2) * self.__activation_bar_1[winner_som_1]
                                                      * (k - 1.0) + learning_rate_2 * activation_1)
             self.__activation_bar_2[winner_som_2] = ((1.0 - learning_rate_2) * self.__activation_bar_2[winner_som_2]

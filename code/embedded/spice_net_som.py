@@ -151,7 +151,8 @@ class SpiceNetSom:
             Updates the weights of the neurons.
             :param value: The value in wich "direction" the neuron should move.
             :param learn_rate: The learn rate. (This value should be depending on the iteration.)
-            :param interaction_kernel_learning_rate: The sigma of the interaction kernel. (This value should be depending on the iteration.)
+            :param interaction_kernel_learning_rate: The sigma of the interaction kernel.
+            (This value should be depending on the iteration.)
             :param distance_to_winner: The distance between this neuron and the winning neuron, in the SOM.
             Here are not the weights / postions in the value range relevant.
             (N1 weight: 31.9) --- (N2 weight: 32) --- (N3 weight: 32.4) --- (N4 weight: 33)
