@@ -61,6 +61,9 @@ class SpiceNetSom:
         return np.array([[neuron.preferred_value for neuron in self.__neurons],
                          [neuron.tuning_curve_width for neuron in self.__neurons]]).transpose()
 
+    def get_activation_vector(self, value: float) -> np.array:
+        return np.array([neuron.activation_for_value(value) for neuron in self.__neurons])
+
     def calculate_activation_values(self, values: list[float]):
         """
         Calculates activation values for all neurons in the som.
