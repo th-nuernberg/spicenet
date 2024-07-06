@@ -93,8 +93,9 @@ class SpiceNetSom:
         return winning_neuron_index, activation_values[winning_neuron_index]
 
     def naive_decode(self, value: float, neuron_index: int) -> float:
-        activation_value = self.__neurons[neuron_index].activation_for_value(value)
-        activation_value += 1000000
+        # activation_value = self.__neurons[neuron_index].activation_for_value(value)
+        activation_value = value
+        # activation_value += 1000000
         # print(f'neuron: {neuron_index} value: {value} activation: {activation_value}')
         # print(f'prefered_value: {self.__neurons[neuron_index].preferred_value}')
         # print(f'width: {self.__neurons[neuron_index].tuning_curve_width}')
