@@ -13,5 +13,5 @@ class LinearLRF(LearningRateFunction):
 
 def declining_linear_lrf_from_interval(start: float, stop: float, steps: int) -> LinearLRF:
     bias = start
-    slope = (start - stop) / steps
-    return LinearLRF(bias, slope)
+    slope = -((start - stop) / steps)
+    return LinearLRF(slope, bias)
