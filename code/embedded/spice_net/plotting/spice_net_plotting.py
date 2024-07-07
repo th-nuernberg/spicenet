@@ -49,8 +49,9 @@ def plot_som(som: SpiceNetSom, select_all_button: bool = False):
     fig.show(title='Activation values')
 
 
-def plot_hcm(hcm: SpiceNetHcm):
-    fig = px.imshow(hcm.get_matrix(), text_auto=True, aspect="auto")
+def plot_hcm(hcm: SpiceNetHcm, normed: bool = False):
+    matrix = hcm.get_matrix() if normed is False else np.where(hcm.get_matrix() > 0, 1, -1)
+    fig = px.imshow(matrix, text_auto=False, aspect="auto")
     fig['layout']['yaxis']['autorange'] = "min"
     fig.update_layout(yaxis=dict(scaleanchor='x'))
     fig.show()
