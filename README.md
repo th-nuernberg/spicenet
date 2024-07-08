@@ -1,6 +1,8 @@
 ![](media/spice-net-logo-green-ai.png)
 
-# SPICEnet Embedded
-Sensorimotor Processing, Intelligence, and Control with Embedded Neural Networks (SPICEnet)
+# SPICEnet in Python
 
-Goal of this project is the 
+[(Original Repo)](https://github.com/102-97-98-105/spicenet-embedded)
+
+Im Ordner python_package finden sich die von mir geschriebenen Dateien. Ich habe ursprünglich das
+Repo https://github.com/th-nuernberg/spicenet geforked. 

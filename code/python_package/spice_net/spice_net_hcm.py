@@ -43,6 +43,12 @@ class SpiceNetHcm:
         # Take each column of the weight matrix and calculate the dot product with the input array.
         return np.array([a_array.dot(self.__weights[:, i]) for i in range(self.__weights.shape[0])])
 
+    def calculate_som_2_to_1(self, a_array: np.array) -> np.array:
+        if a_array.shape != (len(self.__som_2),):
+            raise ValueError("The input vector must be of the same length as the som amount of neurons.")
+        # Take each column of the weight matrix and calculate the dot product with the input array.
+        return np.array([a_array.dot(self.__weights[i, :]) for i in range(self.__weights.shape[1])])
+
     def fit(self,
             values_som_1: list[float],
             values_som_2: list[float],

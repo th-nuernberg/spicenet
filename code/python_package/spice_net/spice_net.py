@@ -24,12 +24,22 @@ class SpiceNet:
     def get_correlation_matrix(self):
         return self.__correlation_matrix
 
-    def decode_som_1(self, value: float) -> float:
-        activation_values = self.__som_1.get_activation_vector(value)
-        som_2_should_activations = self.__correlation_matrix.calculate_som_1_to_2(activation_values)
-        winner_index = som_2_should_activations.argmax()
+    def decode(self, som_1_value: Optional[float] = None, som_2_value: Optional[float] = None) -> float:
+        if som_1_value is None and som_2_value is None:
+            raise ValueError('som_1_value and som_2_value cannot be both None')
 
-        return self.__som_2.naive_decode(som_2_should_activations[winner_index], winner_index)
+        if som_1_value is not None:
+            activation_values = self.__som_1.get_activation_vector(som_1_value)
+            som_2_should_activations = self.__correlation_matrix.calculate_som_1_to_2(activation_values)
+            winner_index = som_2_should_activations.argmax()
+
+            return self.__som_2.naive_decode(som_2_should_activations[winner_index], winner_index)
+        else:
+            activation_values = self.__som_2.get_activation_vector(som_2_value)
+            som_1_should_activations = self.__correlation_matrix.calculate_som_2_to_1(activation_values)
+            winner_index = som_1_should_activations.argmax()
+
+            return self.__som_1.naive_decode(som_1_should_activations[winner_index], winner_index)
 
     def fit(self,
             values_som_1: list[float],
