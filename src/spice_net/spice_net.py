@@ -53,8 +53,8 @@ class SpiceNet:
         :param values_som_1: The values for the som no. 1.
         :param values_som_2: The values for the som no. 2.
         :param epochs_on_batch: Define how often a batch is used for training.
-        :param batch_size: The values will be split in batches for training.
-        :param after_batch_callback: This method will be called after each training with a batch. (Use it for plotting or ...)
+        :param batch_size: The values will be split in batches of this size for the training.
+        :param after_batch_callback: This method will be called after each training with a batch. (Use it for plotting or what ever)
         :param print_output: This will toggle a progressbar implemented with tqdm and stops the computation times.
         :return:
         """
