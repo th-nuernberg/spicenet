@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "spicenet"
 version = "1.0.0"
-description = ""
+description = "SPICEnet is an artificial neural network that is capable of identifying the mathematical relationship between two values. This library provides a single core implementation for quick usage."
 authors = ["Fabian Stiegler <stiegler.fabian.dev@gmail.com>"]
 readme = "README.md"
 packages = [

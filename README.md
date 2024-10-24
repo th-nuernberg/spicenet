@@ -1,7 +1,7 @@
 ![](media/spice-net-logo-green-ai.png)
 
 # SPICEnet in Python
-This is a single core implementation of the SPICEnet.
+SPICEnet is an artificial neural network that is capable of identifying the mathematical relationship between two values. This library provides a single core implementation for quick usage.
 For more information about the network look up the pdf in the docs folder.
 
 ## Install
