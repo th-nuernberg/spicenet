@@ -1,9 +1,0 @@
-version: '3.8'
-
-services:
-  tensorflow:
-    image: spicenet-embedded
-    runtime: nvidia
-    ports:
-      - 2222:22
-    tty: true
