@@ -1,6 +1,7 @@
 import time
 from typing import Optional, Callable
 
+import numpy as np
 from tqdm import tqdm
 
 from .spice_net_hcm import SpiceNetHcm
@@ -42,7 +43,7 @@ class SpiceNet:
             return self.__som_1.naive_decode(som_1_should_activations[winner_index], winner_index)
 
     def fit(self,
-            values_som_1: list[float],
+            values_som_1: list[float | np.ndarray[any, np.dtype[np.float64]]],
             values_som_2: list[float],
             epochs_on_batch: int,
             batch_size: Optional[int] = None,

@@ -50,7 +50,7 @@ class SpiceNetHcm:
         return np.array([a_array.dot(self.__weights[i, :]) for i in range(self.__weights.shape[1])])
 
     def fit(self,
-            values_som_1: list[float],
+            values_som_1: list[float | np.ndarray[any, np.dtype[np.float64]]],
             values_som_2: list[float],
             epochs: int):
         """
