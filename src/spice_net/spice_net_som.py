@@ -179,7 +179,11 @@ class SpiceNetSom:
             return self.__neurons[neuron_index].preferred_value + r
 
     def decode(self, activations: np.array) -> float:
-
+        # input is given
+        # cost = som_known(input) - (som_searched(x) * correlation)
+        # better:
+        # cost = som_known_winning(input) - (som_searched_winning(x) * correlation)
+        # tol=(1.0e-6)*(limL + limH)/2.0;
         pass
 
     def __argmax_neuron_activation(self, value: float | np.ndarray[any, np.dtype[np.float64]]):
