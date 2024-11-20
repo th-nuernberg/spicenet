@@ -28,6 +28,8 @@ class SpiceNet:
     def decode(self, som_1_value: Optional[float] = None, som_2_value: Optional[float] = None) -> float:
         if som_1_value is None and som_2_value is None:
             raise ValueError('som_1_value and som_2_value cannot be both None')
+        elif som_1_value is not None and som_2_value is not None:
+            raise ValueError('this function will decode only one value')
 
         if som_1_value is not None:
             activation_values = self.__som_1.get_activation_vector(som_1_value)
