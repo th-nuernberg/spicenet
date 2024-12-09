@@ -1,11 +1,16 @@
 import time
-from typing import Optional, Callable
+from typing import Optional, Callable, Literal
 
 import numpy as np
 from tqdm import tqdm
 
+from . import approximate_local_min
 from .spice_net_hcm import SpiceNetHcm
 from .spice_net_som import SpiceNetSom
+
+
+def _norm(vec: np.array) -> np.array:
+    return vec / vec[vec.argmax()]
 
 
 class SpiceNet:
@@ -25,24 +30,52 @@ class SpiceNet:
     def get_correlation_matrix(self):
         return self.__correlation_matrix
 
-    def decode(self, som_1_value: Optional[float] = None, som_2_value: Optional[float] = None) -> float:
+    def decode(self,
+               som_1_value: Optional[float] = None,
+               som_2_value: Optional[float] = None,
+               decoder: Literal["naive", "bert-optimizer"] = "bert-optimizer") -> float:
         if som_1_value is None and som_2_value is None:
             raise ValueError('som_1_value and som_2_value cannot be both None')
         elif som_1_value is not None and som_2_value is not None:
             raise ValueError('this function will decode only one value')
 
-        if som_1_value is not None:
-            activation_values = self.__som_1.get_activation_vector(som_1_value)
-            som_2_should_activations = self.__correlation_matrix.calculate_som_1_to_2(activation_values)
-            winner_index = som_2_should_activations.argmax()
+        match decoder:
+            case "naive":
+                if som_1_value is not None:
+                    activation_values = self.__som_1.get_activation_vector(som_1_value)
+                    som_2_should_activations = self.__correlation_matrix.calculate_som_1_to_2(activation_values)
+                    winner_index = som_2_should_activations.argmax()
 
-            return self.__som_2.naive_decode(som_2_should_activations[winner_index], winner_index)
-        else:
-            activation_values = self.__som_2.get_activation_vector(som_2_value)
-            som_1_should_activations = self.__correlation_matrix.calculate_som_2_to_1(activation_values)
-            winner_index = som_1_should_activations.argmax()
+                    return self.__som_2.naive_decode(som_2_should_activations[winner_index], winner_index)
+                else:
+                    activation_values = self.__som_2.get_activation_vector(som_2_value)
+                    som_1_should_activations = self.__correlation_matrix.calculate_som_2_to_1(activation_values)
+                    winner_index = som_1_should_activations.argmax()
 
-            return self.__som_1.naive_decode(som_1_should_activations[winner_index], winner_index)
+                    return self.__som_1.naive_decode(som_1_should_activations[winner_index], winner_index)
+
+            case "bert-optimizer":
+                # input is given
+                # cost = (normed(som_known(input) * correlation) - normed(som_searched(x)))²
+                #      = (normed(should) - normed(som_searched(x)))²
+
+                # cost = som_known(input) - (som_searched(x) * correlation)
+                # better:
+                # cost = som_known_winning(input) - (som_searched_winning(x) * correlation)
+                # tol=(1.0e-6)*(limL + limH)/2.0;
+                if som_1_value is not None:
+                    activation_values = self.__som_1.get_activation_vector(som_1_value)
+                    som_2_should_activations = self.__correlation_matrix.calculate_som_1_to_2(activation_values)
+                    # norm
+                    normed_som_2_should_activations = _norm(som_2_should_activations)
+                    fn = lambda x: pow(normed_som_2_should_activations - _norm(self.__som_2.get_activation_vector(x)),2)
+                    return approximate_local_min(start, end, 0.0,0.0, fn)
+                else:
+                    activation_values = self.__som_2.get_activation_vector(som_2_value)
+                    som_1_should_activations = self.__correlation_matrix.calculate_som_2_to_1(activation_values)
+                    winner_index = som_1_should_activations.argmax()
+
+                    return self.__som_1.naive_decode(som_1_should_activations[winner_index], winner_index)
 
     def fit(self,
             values_som_1: list[float | np.ndarray[any, np.dtype[np.float64]]],
@@ -94,3 +127,4 @@ class SpiceNet:
 
         if print_output:
             print(f'Time spend on the Components: \nSom: {som_elapsed_time} s | Convolution Matrix: {cm_elapsed_time} s')
+

@@ -18,7 +18,7 @@ def approximate_local_min(interval_start: float, interval_end: float, eps: float
     e = 0
     fv = fw = fx = function(x)
 
-    tol = 1.0e-6 * (limL + limH) / 2.0
+    # tol = 1.0e-6 * (limL + limH) / 2.0
 
     tol = eps * abs(x) + t
     m = 0.5 * (interval_start + interval_end)

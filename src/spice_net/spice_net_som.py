@@ -60,6 +60,7 @@ class SpiceNetSom:
                 winning_neuron_index, _ = self.__argmax_neuron_activation(values[i])
 
                 for j in range(len(self.__neurons)):
+                    # TODO: Fix passed iterations
                     self.__neurons[j].update(values[i],
                                              self.__lrf_tuning_curve.call(self.__iteration),
                                              self.__lrf_interaction_kernel.call(self.__iteration),
@@ -116,14 +117,6 @@ class SpiceNetSom:
         else:
             return self.__neurons[neuron_index].preferred_value + r
 
-    def decode(self, activations: np.array) -> float:
-        # input is given
-        # cost = som_known(input) - (som_searched(x) * correlation)
-        # better:
-        # cost = som_known_winning(input) - (som_searched_winning(x) * correlation)
-        # tol=(1.0e-6)*(limL + limH)/2.0;
-        pass
-
     def __argmax_neuron_activation(self, value: float | np.ndarray[any, np.dtype[np.float64]]):
         """
         Calculates the neuron with the highest activation value.
@@ -178,7 +171,7 @@ class SpiceNetSom:
                         (1.0 / (math.sqrt(2.0 * math.pi) * self.tuning_curve_width))
                         *
                         math.exp(
-                            (-(value - self.preferred_value) ** 2) /
+                            (-((value - self.preferred_value) ** 2)) / #FIXME: Wo muss das - hin vor dem exponent oder nach
                             (2.0 * self.tuning_curve_width ** 2))
                 )
             else:
@@ -186,7 +179,7 @@ class SpiceNetSom:
                         (1.0 / (math.sqrt(2.0 * math.pi) * self.tuning_curve_width))
                         *
                         math.exp(
-                            (-(np.linalg.vector_norm(value - self.preferred_value)) ** 2) /
+                            (-((np.linalg.vector_norm(value - self.preferred_value)) ** 2)) /
                             (2.0 * self.tuning_curve_width ** 2))
                 )
 
@@ -215,12 +208,13 @@ class SpiceNetSom:
             """
             interaction_kernel_value = math.exp(
                 (-abs(distance_to_winner) ** 2) / (2 * interaction_kernel_learning_rate ** 2))
+            old_preferred_value = self.preferred_value
             self.preferred_value += learn_rate * interaction_kernel_value * (value - self.preferred_value)
             if isinstance(value, float):
                 self.tuning_curve_width += learn_rate * interaction_kernel_value * (
-                        (value - self.preferred_value) ** 2 - self.tuning_curve_width ** 2
+                        (value - old_preferred_value) ** 2 - self.tuning_curve_width ** 2
                 )
             else:
                 self.tuning_curve_width += learn_rate * interaction_kernel_value * (
-                        np.linalg.vector_norm(value - self.preferred_value) ** 2 - self.tuning_curve_width ** 2
+                        np.linalg.vector_norm(value - old_preferred_value) ** 2 - self.tuning_curve_width ** 2
                 )

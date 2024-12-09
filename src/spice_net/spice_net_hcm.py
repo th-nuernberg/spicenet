@@ -38,6 +38,11 @@ class SpiceNetHcm:
         return self.__weights
 
     def calculate_som_1_to_2(self, a_array: np.array) -> np.array:
+        """
+        This function does not return the 'true' activation just the anticipated distribution.
+        :param a_array:
+        :return:
+        """
         if a_array.shape != (len(self.__som_1),):
             raise ValueError("The input vector must be of the same length as the som amount of neurons.")
         # Take each column of the weight matrix and calculate the dot product with the input array.
@@ -79,9 +84,9 @@ class SpiceNetHcm:
                 # Som 1 represents the y-axis and Som 2 the x-axis
                 weights_delta_matrix = (
                         self.__lrf_weights.call(self.__iteration)
-                        * np.matrix(activation_vector_som_1 - self.__activation_bar_vector_1)
+                        * (np.matrix(activation_vector_som_1 - self.__activation_bar_vector_1)
                         .transpose()
-                        .dot(np.matrix(activation_vector_som_2 - self.__activation_bar_vector_2))
+                        .dot(np.matrix(activation_vector_som_2 - self.__activation_bar_vector_2)))
                 )
                 self.__weights += weights_delta_matrix
                 self.__iteration += 1
