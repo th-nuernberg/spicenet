@@ -77,7 +77,8 @@ class SpiceNet:
                     end_index = winning_index + 1 if winning_index < len(activation_values) - 2 else winning_index
                     start: float = self.__som_2.get_as_matrix()[start_index][0]
                     end: float = self.__som_2.get_as_matrix()[end_index][0]
-                    return approximate_local_min_axenie(start, end, fn, tolerance=(1.0e-6) * (start + end) / 2.0)
+                    print(f'som_1_value: {som_1_value}, start_index: {start_index}, end_index: {end_index}, winning_index: {winning_index}, start: {start}, end: {end}')
+                    return approximate_local_min_axenie(start, end, fn, tolerance=abs((1.0e-6) * (start + end) / 2.0))
                 else:
                     activation_values = self.__som_2.get_activation_vector(som_1_value)
                     som_1_should_activations = self.__correlation_matrix.calculate_som_2_to_1(activation_values)
@@ -90,7 +91,7 @@ class SpiceNet:
                     end_index = winning_index + 1 if winning_index < len(activation_values) - 2 else winning_index
                     start: float = self.__som_1.get_as_matrix()[start_index][0]
                     end: float = self.__som_1.get_as_matrix()[end_index][0]
-                    return approximate_local_min_axenie(start, end, fn, tolerance=(1.0e-6) * (start + end) / 2.0)
+                    return approximate_local_min_axenie(start, end, fn, tolerance=abs((1.0e-6) * (start + end) / 2.0))
 
     def fit(self,
             values_som_1: list[float | np.ndarray[any, np.dtype[np.float64]]],

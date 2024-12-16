@@ -104,9 +104,10 @@ def approximate_local_min_axenie(interval_start: float,
     :param interval_end: the included end of the interval.
     :param function: A function defined on the interval. The local minima will be approximated for this function.
     """
+    assert tolerance > 0.0
 
 
-    print(f'start: {interval_start} end: {interval_end}')
+    # print(f'interval_start: {interval_start} interval_end: {interval_end} tolerance: {tolerance}')
     current_start = interval_start
     current_end = interval_end
     c = interval_end
@@ -164,4 +165,4 @@ def approximate_local_min_axenie(interval_start: float,
         else:
             current_end = current_end + (abs(tol) if xm >= 0 else abs(tol) * -1)
         f_end = function(current_end)
-    raise Exception("fuck")
+    raise Exception("This should not happen. Check your values and think about increasing the allowed iterations.")
