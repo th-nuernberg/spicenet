@@ -208,7 +208,7 @@ class SpiceNetSom:
             """
             interaction_kernel_value = math.exp(
                 (-abs(distance_to_winner) ** 2) / (2 * interaction_kernel_learning_rate ** 2))
-            old_preferred_value = self.preferred_value
+            old_preferred_value = self.preferred_value #FIXME: Wirklich mit old arbeiten?
             self.preferred_value += learn_rate * interaction_kernel_value * (value - self.preferred_value)
             if isinstance(value, float):
                 self.tuning_curve_width += learn_rate * interaction_kernel_value * (

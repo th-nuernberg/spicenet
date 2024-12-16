@@ -4,13 +4,14 @@ from typing import Optional, Callable, Literal
 import numpy as np
 from tqdm import tqdm
 
-from . import approximate_local_min
+from . import approximate_local_min_axenie
 from .spice_net_hcm import SpiceNetHcm
 from .spice_net_som import SpiceNetSom
 
 
 def _norm(vec: np.array) -> np.array:
-    return vec / vec[vec.argmax()]
+    return vec / vec[vec.argmax()] # TODO: Doc
+    # return vec / np.sum(vec)
 
 
 class SpiceNet:
@@ -68,14 +69,28 @@ class SpiceNet:
                     som_2_should_activations = self.__correlation_matrix.calculate_som_1_to_2(activation_values)
                     # norm
                     normed_som_2_should_activations = _norm(som_2_should_activations)
-                    fn = lambda x: pow(normed_som_2_should_activations - _norm(self.__som_2.get_activation_vector(x)),2)
-                    return approximate_local_min(start, end, 0.0,0.0, fn)
-                else:
-                    activation_values = self.__som_2.get_activation_vector(som_2_value)
-                    som_1_should_activations = self.__correlation_matrix.calculate_som_2_to_1(activation_values)
-                    winner_index = som_1_should_activations.argmax()
+                    winning_index = normed_som_2_should_activations.argmax()
+                    fn = lambda x: np.linalg.norm(
+                        normed_som_2_should_activations - _norm(self.__som_2.get_activation_vector(x))) ** 2 # TODO: Doc quadratic
 
-                    return self.__som_1.naive_decode(som_1_should_activations[winner_index], winner_index)
+                    start_index = winning_index - 1 if winning_index > 0 else winning_index
+                    end_index = winning_index + 1 if winning_index < len(activation_values) - 2 else winning_index
+                    start: float = self.__som_2.get_as_matrix()[start_index][0]
+                    end: float = self.__som_2.get_as_matrix()[end_index][0]
+                    return approximate_local_min_axenie(start, end, fn, tolerance=(1.0e-6) * (start + end) / 2.0)
+                else:
+                    activation_values = self.__som_2.get_activation_vector(som_1_value)
+                    som_1_should_activations = self.__correlation_matrix.calculate_som_2_to_1(activation_values)
+                    # norm
+                    normed_som_1_should_activations = _norm(som_1_should_activations)
+                    winning_index = normed_som_1_should_activations.argmax()
+                    fn = lambda x: np.linalg.norm(
+                        normed_som_1_should_activations - _norm(self.__som_1.get_activation_vector(x))) ** 2
+                    start_index = winning_index - 1 if winning_index > 0 else winning_index
+                    end_index = winning_index + 1 if winning_index < len(activation_values) - 2 else winning_index
+                    start: float = self.__som_1.get_as_matrix()[start_index][0]
+                    end: float = self.__som_1.get_as_matrix()[end_index][0]
+                    return approximate_local_min_axenie(start, end, fn, tolerance=(1.0e-6) * (start + end) / 2.0)
 
     def fit(self,
             values_som_1: list[float | np.ndarray[any, np.dtype[np.float64]]],
@@ -126,5 +141,5 @@ class SpiceNet:
                 after_batch_callback()
 
         if print_output:
-            print(f'Time spend on the Components: \nSom: {som_elapsed_time} s | Convolution Matrix: {cm_elapsed_time} s')
-
+            print(
+                f'Time spend on the Components: \nSom: {som_elapsed_time} s | Convolution Matrix: {cm_elapsed_time} s')
