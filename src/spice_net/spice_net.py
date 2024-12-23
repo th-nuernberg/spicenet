@@ -88,7 +88,7 @@ class SpiceNet:
                 end_index = winning_index + 1 if winning_index < len(normed_should_activations) - 2 else winning_index
                 start: float = som.get_as_matrix()[start_index][0]
                 end: float = som.get_as_matrix()[end_index][0]
-                #print(f'start_index: {start_index}, end_index: {end_index}, winning_index: {winning_index}, start: {start}, end: {end}')
+                # print(f'start_index: {start_index}, end_index: {end_index}, winning_index: {winning_index}, start: {start}, end: {end}')
                 return approximate_local_min_axenie(start, end, fn, tolerance=abs((1.0e-6) * (start + end) / 2.0))
 
     def fit(self,
@@ -102,6 +102,7 @@ class SpiceNet:
         :param values:
         :param epochs_on_batch: Define how often a batch is used for training.
         :param batch_size: The values will be split in batches of this size for the training.
+        (First the soms will train on ALL the batches data, then the correlation matrix will be trained.)
         :param after_batch_callback: This method will be called after each training with a batch. (Use it for plotting or what ever)
         :param print_output: This will toggle a progressbar implemented with tqdm and stops the computation times.
         :return:
@@ -137,7 +138,7 @@ class SpiceNet:
             if print_output:
                 tmp = time.time()
 
-            temp = {key: partitions[key][i] for key in keys }
+            temp = {key: partitions[key][i] for key in keys}
             self.__correlation_matrix.fit(values=temp,
                                           epochs=epochs_on_batch)
             if print_output:

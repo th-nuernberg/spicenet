@@ -57,11 +57,23 @@ class SpiceNetHcm:
         These are not the numbers return by the action function, but the ratio of the activation values is close to the real value.
         """
         target_index = self.__som_key_to_index[target_som_key]
+        sorted_vectors = []
         for som in self.__soms:
             if som.get_key() == target_som_key:
                 continue
             if input_activations[som.get_key()] is None and som.get_key() != target_som_key:
                 raise ValueError('Missing value for ' + som.get_key())
+            else:
+                sorted_vectors.append(input_activations[som.get_key()])
+
+        result = []
+        for i in range(len(self.__soms[target_index])):
+            array_slice = np.take(self.__weights, indices=i, axis=target_index)
+            grids = np.meshgrid(*sorted_vectors, indexing='ij')
+            for grid in grids:
+                array_slice *= grid
+            result.append(np.sum(array_slice))
+        return np.array(result)
 
         # TODO: change to relative collapse instead of absolute
         result = []
@@ -72,7 +84,9 @@ class SpiceNetHcm:
             result.append(self.__should_help(keys, index_list, [], input_activations))
         return np.array(result)
 
-    def __should_help(self, remaining_keys: list[str], indices: list[int], values: list[float],
+    def __should_help(self, remaining_keys: list[str],
+                      indices: list[int],
+                      values: list[float],
                       input_activations: typing.Mapping[str, np.ndarray]) -> float:
         """
 
