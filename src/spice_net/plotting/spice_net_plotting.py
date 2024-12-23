@@ -49,12 +49,41 @@ def plot_som(som: SpiceNetSom, select_all_button: bool = False):
     fig.show(title='Activation values')
 
 
-def plot_hcm(hcm: SpiceNetHcm, normed: bool = False):
-    matrix = hcm.get_matrix() if normed is False else np.where(hcm.get_matrix() > 0, 1, -1)
-    fig = px.imshow(matrix, text_auto=False, aspect="auto")
-    fig['layout']['yaxis']['autorange'] = "min"
-    fig.update_layout(yaxis=dict(scaleanchor='x'))
-    fig.show()
+def plot_hcm(hcm: SpiceNetHcm,
+             normed: bool = False,
+             filter_start: Optional[float] = None,
+             filter_end: Optional[float] = None,
+             width=None,
+             height=None):
+    if len(hcm.get_soms()) == 2:
+        matrix = hcm.get_matrix() if normed is False else np.where(hcm.get_matrix() > 0, 1, -1)
+        fig = px.imshow(matrix, text_auto=False, aspect="auto", width=width, height=height)
+        fig['layout']['yaxis']['autorange'] = "min"
+        fig.update_layout(yaxis=dict(scaleanchor='x'))
+        fig.show()
+    elif len(hcm.get_soms()) == 3:
+        it = np.nditer(hcm.get_matrix(), flags=['multi_index'])
+        x_list = []
+        y_list = []
+        z_list = []
+        value_list = []
+        for value in it:
+            value_list.append(float(value))
+            x_list.append(it.multi_index[0])
+            z_list.append(it.multi_index[1])
+            y_list.append(it.multi_index[2])
+        df = pd.DataFrame(data={'x': x_list, 'y': y_list, 'z': z_list, 'value': value_list})
+        if filter_start is not None:
+            df = df[df['value'] >= filter_start]
+        if filter_end is not None:
+            df = df[df['value'] <= filter_end]
+        fig = px.scatter_3d(df, x='x', y='y', z='z',
+                            color='value', opacity=0.7,
+                            width=width, height=height)
+        fig.update_traces(marker_size=3)
+        fig.show()
+    else:
+        raise ValueError('Can only plot 2 or 3 dimensional correlation matrixes')
 
 
 def plot_som_weights_stem(som: SpiceNetSom):

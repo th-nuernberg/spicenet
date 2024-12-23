@@ -7,7 +7,7 @@ from .learning_rate_functions import LearningRateFunction
 
 class SpiceNetSom:
     """
-    This self organizing map implementation is specifically for SpiceNet. It creates a 1D som.
+    This self organizing map implementation is specifically for SpiceNet.
     For more information read the theory papers included.
     """
 
@@ -17,7 +17,8 @@ class SpiceNetSom:
                  value_range_end: float,
                  lrf_tuning_curve: LearningRateFunction,
                  lrf_interaction_kernel: LearningRateFunction,
-                 make_2d_input: bool = False, ):
+                 key: str,
+                 dimensions: int = 1, ):
         """
         Creates a SpiceNetSom with neurons equally distributed across the specified value range.
 
@@ -28,7 +29,12 @@ class SpiceNetSom:
         It is possible to fit values outside of this range!)
         :param lrf_tuning_curve: Use this parameter to define how fast the tuning curve is changed.
         :param lrf_interaction_kernel: Use this parameter to define how strong the interaction kernel affects the preferred value of a node.
+        :param key: The key to identify the som.
+        :param dimensions: The dimensions of the som nodes (the data represented).
         """
+        assert dimensions >= 1
+
+        self.__key = key
         self.__lrf_interaction_kernel = lrf_interaction_kernel
         self.__lrf_tuning_curve = lrf_tuning_curve
         self.__iteration = 0
@@ -40,10 +46,10 @@ class SpiceNetSom:
         pos = value_range_start + step_size / 2.0
 
         for i in range(n_neurons):
-            if make_2d_input:
-                new_neuron = SpiceNetSom.__SomNeuron(np.array([pos, pos]))
-            else:
+            if dimensions == 1:
                 new_neuron = SpiceNetSom.__SomNeuron(pos)
+            else:
+                new_neuron = SpiceNetSom.__SomNeuron(np.array([pos for i in range(dimensions)]))
             self.__neurons.append(new_neuron)
             pos += step_size
 
@@ -66,6 +72,9 @@ class SpiceNetSom:
                                              self.__lrf_interaction_kernel.call(self.__iteration),
                                              j - winning_neuron_index)
                 self.__iteration += 1
+
+    def get_key(self):
+        return self.__key
 
     def get_as_matrix(self) -> np.ndarray:
         """
