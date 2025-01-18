@@ -14,3 +14,9 @@ def som_to_nir():
 
 def nir_to_som():
     pass
+
+def som_neuron_to_nir():
+    pass
+
+def nir_to_som_neuron():
+    pass

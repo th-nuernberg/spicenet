@@ -1,0 +1,3 @@
+[submodule "NIR"]
+	path = NIR
+	url = https://github.com/lmitlaender/NIR.git
