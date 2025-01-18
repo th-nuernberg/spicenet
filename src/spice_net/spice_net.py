@@ -10,16 +10,16 @@ from .spice_net_som import SpiceNetSom
 class SpiceNet:
     def __init__(self,
                  correlation_matrix: SpiceNetHcm):
-        self.__som_1: SpiceNetSom
-        self.__som_2: SpiceNetSom
-        self.__som_1, self.__som_2 = correlation_matrix.get_soms()
+        self.som_1: SpiceNetSom
+        self.som_2: SpiceNetSom
+        self.som_1, self.som_2 = correlation_matrix.get_soms()
         self.__correlation_matrix = correlation_matrix
 
     def get_som_1(self):
-        return self.__som_1
+        return self.som_1
 
     def get_som_2(self):
-        return self.__som_2
+        return self.som_2
 
     def get_correlation_matrix(self):
         return self.__correlation_matrix
@@ -29,17 +29,17 @@ class SpiceNet:
             raise ValueError('som_1_value and som_2_value cannot be both None')
 
         if som_1_value is not None:
-            activation_values = self.__som_1.get_activation_vector(som_1_value)
+            activation_values = self.som_1.get_activation_vector(som_1_value)
             som_2_should_activations = self.__correlation_matrix.calculate_som_1_to_2(activation_values)
             winner_index = som_2_should_activations.argmax()
 
-            return self.__som_2.naive_decode(som_2_should_activations[winner_index], winner_index)
+            return self.som_2.naive_decode(som_2_should_activations[winner_index], winner_index)
         else:
-            activation_values = self.__som_2.get_activation_vector(som_2_value)
+            activation_values = self.som_2.get_activation_vector(som_2_value)
             som_1_should_activations = self.__correlation_matrix.calculate_som_2_to_1(activation_values)
             winner_index = som_1_should_activations.argmax()
 
-            return self.__som_1.naive_decode(som_1_should_activations[winner_index], winner_index)
+            return self.som_1.naive_decode(som_1_should_activations[winner_index], winner_index)
 
     def fit(self,
             values_som_1: list[float],
@@ -73,8 +73,8 @@ class SpiceNet:
         for i in iterator:
             if print_output:
                 tmp = time.time()
-            self.__som_1.fit(p_list_som_1[i], epochs_on_batch)
-            self.__som_2.fit(p_list_som_2[i], epochs_on_batch)
+            self.som_1.fit(p_list_som_1[i], epochs_on_batch)
+            self.som_2.fit(p_list_som_2[i], epochs_on_batch)
             if print_output:
                 som_elapsed_time += time.time() - tmp
 

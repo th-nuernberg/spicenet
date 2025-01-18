@@ -34,19 +34,19 @@ class SpiceNetSom:
         distance = value_range_end - value_range_start
         step_size = distance / n_neurons
 
-        self.__neurons = []
+        self.neurons = []
         pos = value_range_start + step_size / 2.0
 
         for i in range(n_neurons):
-            new_neuron = SpiceNetSom.__SomNeuron(pos)
-            self.__neurons.append(new_neuron)
+            new_neuron = SpiceNetSom.SomNeuron(pos)
+            self.neurons.append(new_neuron)
             pos += step_size
 
     def __len__(self) -> int:
-        return len(self.__neurons)
+        return len(self.neurons)
 
     def print_neurons(self):
-        for neuron in self.__neurons:
+        for neuron in self.neurons:
             print(neuron)
 
     def fit(self, values: list[float], epochs: int):
@@ -54,8 +54,8 @@ class SpiceNetSom:
             for i in range(len(values)):
                 winning_neuron_index, _ = self.__argmax_neuron_activation(values[i])
 
-                for j in range(len(self.__neurons)):
-                    self.__neurons[j].update(values[i],
+                for j in range(len(self.neurons)):
+                    self.neurons[j].update(values[i],
                                              self.__lrf_tuning_curve.call(self.__iteration),
                                              self.__lrf_interaction_kernel.call(self.__iteration),
                                              j - winning_neuron_index)
@@ -67,11 +67,11 @@ class SpiceNetSom:
         and column 1 representing the tuning curve width.
         :return: A numpy matrix.
         """
-        return np.array([[neuron.preferred_value for neuron in self.__neurons],
-                         [neuron.tuning_curve_width for neuron in self.__neurons]]).transpose()
+        return np.array([[neuron.preferred_value for neuron in self.neurons],
+                         [neuron.tuning_curve_width for neuron in self.neurons]]).transpose()
 
     def get_activation_vector(self, value: float) -> np.array:
-        return np.array([neuron.activation_for_value(value) for neuron in self.__neurons])
+        return np.array([neuron.activation_for_value(value) for neuron in self.neurons])
 
     def calculate_activation_values(self, values: list[float]):
         """
@@ -80,11 +80,11 @@ class SpiceNetSom:
         :return: A numpy array the first col is the preferred value, second col is the tuning curve width
         and the following cols are the activation values.
         """
-        activation_values = np.array([neuron.activation_for_values(values) for neuron in self.__neurons])
+        activation_values = np.array([neuron.activation_for_values(values) for neuron in self.neurons])
         return np.concatenate((
             np.array(
-                [[neuron.preferred_value for neuron in self.__neurons],
-                 [neuron.tuning_curve_width for neuron in self.__neurons]]).transpose(),
+                [[neuron.preferred_value for neuron in self.neurons],
+                 [neuron.tuning_curve_width for neuron in self.neurons]]).transpose(),
             activation_values),
             axis=1)
 
@@ -103,13 +103,13 @@ class SpiceNetSom:
         # print(math.sqrt(2 * math.pi) * activation_value * self.__neurons[neuron_index].tuning_curve_width ** 2)
         # print(2 * self.__neurons[neuron_index].tuning_curve_width ** 2 * math.log(
         #     math.sqrt(2 * math.pi) * activation_value * self.__neurons[neuron_index].tuning_curve_width ** 2))
-        r = math.sqrt(2 * self.__neurons[neuron_index].tuning_curve_width ** 2 * math.log(
-            math.sqrt(2 * math.pi) * activation_value * self.__neurons[neuron_index].tuning_curve_width ** 2, 10))
+        r = math.sqrt(2 * self.neurons[neuron_index].tuning_curve_width ** 2 * math.log(
+            math.sqrt(2 * math.pi) * activation_value * self.neurons[neuron_index].tuning_curve_width ** 2, 10))
 
-        if neuron_index < len(self.__neurons) / 2:
-            return self.__neurons[neuron_index].preferred_value - r
+        if neuron_index < len(self.neurons) / 2:
+            return self.neurons[neuron_index].preferred_value - r
         else:
-            return self.__neurons[neuron_index].preferred_value + r
+            return self.neurons[neuron_index].preferred_value + r
 
     def __argmax_neuron_activation(self, value: float):
         """
@@ -119,11 +119,11 @@ class SpiceNetSom:
         and a dictionary containing the index of a neuron with the calculated activation value.
         """
         winning_neuron_index: int = 0
-        max_activation = self.__neurons[0].activation_for_value(value)
+        max_activation = self.neurons[0].activation_for_value(value)
         activation_dict = {0: max_activation}
 
-        for i in range(1, len(self.__neurons)):
-            new_activation = self.__neurons[i].activation_for_value(value)
+        for i in range(1, len(self.neurons)):
+            new_activation = self.neurons[i].activation_for_value(value)
             # add new value to a dictionary so the activations only have to be calculated a single time
             activation_dict[i] = new_activation
 
@@ -132,7 +132,7 @@ class SpiceNetSom:
                 winning_neuron_index = i
         return winning_neuron_index, activation_dict
 
-    class __SomNeuron:
+    class SomNeuron:
         """
         This object represents a som neuron. Since this som is 1D the neuron only knows th previous and next neuron.
         """
