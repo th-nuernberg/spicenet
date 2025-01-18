@@ -20,7 +20,7 @@ class SpiceNetHcm:
         """
         self.__lrf_trust_of_new = lrf_trust_of_new
         self.__lrf_weights = lrf_weights
-        self.__weights = np.ones((len(som_1), len(som_2)))
+        self.weights = np.ones((len(som_1), len(som_2)))
         self.__activation_bar_vector_1: np.array = np.zeros(len(som_1))
         self.__activation_bar_vector_2: np.array = np.zeros(len(som_2))
         self.__som_1 = som_1
@@ -35,19 +35,19 @@ class SpiceNetHcm:
         Get the weight matrix.
         :return: The matrix y-axis is the first som given to the constructor (x-axis the second one).
         """
-        return self.__weights
+        return self.weights
 
     def calculate_som_1_to_2(self, a_array: np.array) -> np.array:
         if a_array.shape != (len(self.__som_1),):
             raise ValueError("The input vector must be of the same length as the som amount of neurons.")
         # Take each column of the weight matrix and calculate the dot product with the input array.
-        return np.array([a_array.dot(self.__weights[:, i]) for i in range(self.__weights.shape[0])])
+        return np.array([a_array.dot(self.weights[:, i]) for i in range(self.weights.shape[0])])
 
     def calculate_som_2_to_1(self, a_array: np.array) -> np.array:
         if a_array.shape != (len(self.__som_2),):
             raise ValueError("The input vector must be of the same length as the som amount of neurons.")
         # Take each column of the weight matrix and calculate the dot product with the input array.
-        return np.array([a_array.dot(self.__weights[i, :]) for i in range(self.__weights.shape[1])])
+        return np.array([a_array.dot(self.weights[i, :]) for i in range(self.weights.shape[1])])
 
     def fit(self,
             values_som_1: list[float],
@@ -83,5 +83,5 @@ class SpiceNetHcm:
                         .transpose()
                         .dot(np.matrix(activation_vector_som_2 - self.__activation_bar_vector_2))
                 )
-                self.__weights += weights_delta_matrix
+                self.weights += weights_delta_matrix
                 self.__iteration += 1

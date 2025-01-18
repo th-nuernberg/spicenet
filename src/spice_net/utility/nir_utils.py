@@ -18,9 +18,6 @@ def nir_to_spicenet(
     spicenet_soms = {som_name: nir_to_som(nir_som, som_lrf_tuning_curve, som_lrf_interaction_kernel) for som_name, nir_som in nir_spicenet.soms.items()}
     spicenet_values_list = list(spicenet_soms.values())
     spicenet_keys_list = list(spicenet_soms.keys())
-    if len(spicenet_values_list) == 2:
-        # If there are only two SOMs, create a single SpiceNet
-        return SpiceNet(correlation_matrix=SpiceNetHcm(spicenet_values_list[0], spicenet_values_list[1], hcm_lrf_weights, hcm_trust_of_new))
     
     # Otherwise we need to create multiple SpiceNets - one for each combination
     spicenet_combos = []
@@ -30,14 +27,28 @@ def nir_to_spicenet(
             
     spicenets = {}
     for combo in spicenet_combos:
-        spicenets[f"{combo[0]}_{combo[1]}"] = SpiceNet(correlation_matrix=SpiceNetHcm(spicenet_soms[combo[0]], spicenet_soms[combo[1]], hcm_lrf_weights, hcm_trust_of_new))
+        spicenets[f"{combo[0]}_{combo[1]}"] = SpiceNet(correlation_matrix=nir_to_hcm(nir_spicenet.hcms[f"{combo[0]}_{combo[1]}"], spicenet_soms[f"{combo[0]}"], spicenet_soms[f"{combo[1]}"], hcm_lrf_weights, hcm_trust_of_new))
+        
+    if len(list(spicenets.keys())) == 1:
+        return list(spicenets.values())[0]
         
     return spicenets
 
 def spicenet_to_nir(spicenet: SpiceNet) -> nir.SPICENet:
     """Converts a single SPICEnet to a NIR SPICEnet"""
-    nir_spicenet = nir.SPICENet.from_list([som_to_nir(spicenet.som_1), som_to_nir(spicenet.som_2)])
+    nir_spicenet = nir.SPICENet.from_lists([som_to_nir(spicenet.som_1), som_to_nir(spicenet.som_2)], [(0, 1, hcm_to_nir(spicenet.get_correlation_matrix()))])
     return nir_spicenet
+
+def nir_to_hcm(nir_spicenet_hcm: nir.SPICEnetHCM, som_1: SpiceNetSom, som_2: SpiceNetSom, hcm_lrf_weights: LearningRateFunction, hcm_trust_of_new: LearningRateFunction) -> SpiceNetHcm:
+    hcm = SpiceNetHcm(som_1=som_1, som_2=som_2, lrf_weights=hcm_lrf_weights, lrf_trust_of_new=hcm_trust_of_new)
+    
+    # Override weights with the ones from the NIR SPICEnetHCM
+    hcm.weights = nir_spicenet_hcm.weights
+    return hcm
+
+def hcm_to_nir(spicenet_hcm: SpiceNetHcm) -> nir.SPICEnetHCM:
+    nir_hcm = nir.SPICEnetHCM(weights=spicenet_hcm.weights) # Weights are already numpy array
+    return nir_hcm
 
 def som_to_nir(SpiceNetSom: SpiceNetSom) -> nir.SPICEnetSOM:
     nir_som_neurons = [som_neuron_to_nir(neuron) for neuron in SpiceNetSom.neurons]
