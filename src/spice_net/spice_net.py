@@ -88,7 +88,7 @@ class SpiceNet:
                 end_index = winning_index + 1 if winning_index < len(normed_should_activations) - 2 else winning_index
                 start: float = som.get_as_matrix()[start_index][0]
                 end: float = som.get_as_matrix()[end_index][0]
-                # print(f'start_index: {start_index}, end_index: {end_index}, winning_index: {winning_index}, start: {start}, end: {end}')
+                #print(f'start_index: {start_index}, end_index: {end_index}, winning_index: {winning_index}, start: {start}, end: {end}')
                 return approximate_local_min_axenie(start, end, fn, tolerance=abs((1.0e-6) * (start + end) / 2.0))
 
     def fit(self,

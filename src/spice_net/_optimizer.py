@@ -95,7 +95,7 @@ def approximate_local_min(interval_start: float,
 def approximate_local_min_axenie(interval_start: float,
                                  interval_end: float,
                                  function: Callable[[float], float],
-                                 tolerance: float = None) -> float:
+                                 tolerance: float) -> float:
     """
     This function approximates the local minima of the given function in an interval. For more details look up ISBN 978-1-306-35261-1.
 
@@ -104,7 +104,7 @@ def approximate_local_min_axenie(interval_start: float,
     :param interval_end: the included end of the interval.
     :param function: A function defined on the interval. The local minima will be approximated for this function.
     """
-    assert tolerance > 0.0
+    assert tolerance >= 0.0
 
 
     # print(f'interval_start: {interval_start} interval_end: {interval_end} tolerance: {tolerance}')
