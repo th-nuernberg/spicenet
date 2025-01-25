@@ -82,3 +82,21 @@ def som_neuron_to_nir(spicenet_som_neuron: SpiceNetSom.SomNeuron) -> nir.SPICEne
 
 def nir_to_som_neuron(nir_spicenet_som_neuron: nir.SPICEnetSOMNeuron) -> SpiceNetSom.SomNeuron:
     return SpiceNetSom.SomNeuron(nir_spicenet_som_neuron.mean.item(), nir_spicenet_som_neuron.std.item())
+
+def export_to_hdf5(filepath: str , spicenet: SpiceNet):
+    """Exports a SPICEnet to a HDF5 file."""
+    
+    nir_spicenet = spicenet_to_nir(spicenet)
+    nir.write(filepath, nir_spicenet)
+    
+def read_from_hdf5(
+        filepath: str,
+        som_lrf_tuning_curve: LearningRateFunction,
+        som_lrf_interaction_kernel: LearningRateFunction,
+        hcm_lrf_weights: LearningRateFunction,
+        hcm_trust_of_new: LearningRateFunction
+    ) -> SpiceNet:
+    """Reads a SPICEnet from a HDF5 file."""
+    
+    nir_spicenet = nir.read(filepath)
+    return nir_to_spicenet(nir_spicenet, som_lrf_tuning_curve, som_lrf_interaction_kernel, hcm_lrf_weights, hcm_trust_of_new)
