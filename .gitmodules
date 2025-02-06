@@ -1,3 +1,6 @@
 [submodule "NIR"]
 	path = NIR
 	url = https://github.com/lmitlaender/NIR.git
+[submodule "sinabs"]
+	path = sinabs
+	url = https://github.com/lmitlaender/sinabs.git
