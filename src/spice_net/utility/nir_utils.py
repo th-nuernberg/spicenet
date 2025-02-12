@@ -5,6 +5,79 @@ from ..spice_net_hcm import SpiceNetHcm
 from ..spice_net import SpiceNet
 import nir
 import numpy as np
+from typing import Union
+
+SpiceTypes = Union[SpiceNet, SpiceNetHcm, SpiceNetSom, SpiceNetSom.SomNeuron]
+
+def from_nir(node: nir.NIRNode,
+            som_1: SpiceNetSom = None,
+            som_2: SpiceNetSom = None,
+            som_lrf_tuning_curve: LearningRateFunction = None,
+            som_lrf_interaction_kernel: LearningRateFunction = None,
+            hcm_lrf_weights: LearningRateFunction = None,
+            hcm_trust_of_new: LearningRateFunction = None) -> SpiceTypes | list[SpiceTypes]:
+    # If the node is a graph, we need to iterate over all nodes
+    return _from_nir(node, False, som_1, som_2, som_lrf_tuning_curve, som_lrf_interaction_kernel, hcm_lrf_weights, hcm_trust_of_new)
+        
+def _from_nir(node: nir.NIRNode, 
+            recurse: bool = False,
+            som_1: SpiceNetSom = None,
+            som_2: SpiceNetSom = None,
+            som_lrf_tuning_curve: LearningRateFunction = None,
+            som_lrf_interaction_kernel: LearningRateFunction = None,
+            hcm_lrf_weights: LearningRateFunction = None,
+            hcm_trust_of_new: LearningRateFunction = None) -> SpiceTypes | list[SpiceTypes]:
+    # If the node is a graph, we need to iterate over all nodes
+    if isinstance(node, nir.NIRGraph):
+        result = []
+        for _, subnode in node.nodes.items():
+            result.extend(_from_nir(subnode, True, som_1, som_2, som_lrf_tuning_curve, som_lrf_interaction_kernel, hcm_lrf_weights, hcm_trust_of_new))
+    else:
+        result = [_map_from_nir(node, som_1, som_2, som_lrf_tuning_curve, som_lrf_interaction_kernel, hcm_lrf_weights, hcm_trust_of_new)]
+    
+    result = [x for x in result if x is not None]
+    if len(result) == 1 and not recurse:
+        return result[0]
+    return result
+    
+def _map_from_nir(node: nir.NIRNode,
+                som_1: SpiceNetSom = None,
+                som_2: SpiceNetSom = None,
+                som_lrf_tuning_curve: LearningRateFunction = None,
+                som_lrf_interaction_kernel: LearningRateFunction = None,
+                hcm_lrf_weights: LearningRateFunction = None,
+                hcm_trust_of_new: LearningRateFunction = None) -> Union[SpiceNet, SpiceNetHcm, SpiceNetSom, SpiceNetSom.SomNeuron]:
+    if isinstance(node, nir.SPICENet):
+        return nir_to_spicenet(node, som_lrf_tuning_curve, som_lrf_interaction_kernel, hcm_lrf_weights, hcm_trust_of_new)
+    elif isinstance(node, nir.SPICEnetHCM):
+        return nir_to_hcm(node, som_1, som_2, hcm_lrf_weights, hcm_trust_of_new)
+    elif isinstance(node, nir.SPICEnetSOM):
+        return nir_to_som(node, som_lrf_tuning_curve, som_lrf_interaction_kernel)
+    elif isinstance(node, nir.SPICEnetSOMNeuron):
+        return nir_to_som_neuron(node)
+    elif isinstance(node, nir.Input):
+        None
+    elif isinstance(node, nir.Output):
+        None
+    else:
+        raise TypeError(f"Unsupported node type {type(node)}")
+
+def to_nir(nodes: SpiceTypes | list[SpiceTypes]) -> nir.NIRNode:
+    if isinstance(nodes, list):
+        return nir.NIRGraph.from_list([_map_to_nir(node) for node in nodes])
+    return nir.NIRGraph.from_list([_map_to_nir(nodes)])
+
+def _map_to_nir(node: SpiceTypes) -> nir.NIRNode:
+    if isinstance(node, SpiceNet):
+        return spicenet_to_nir(node)
+    elif isinstance(node, SpiceNetHcm):
+        return hcm_to_nir(node)
+    elif isinstance(node, SpiceNetSom):
+        return som_to_nir(node)
+    elif isinstance(node, SpiceNetSom.SomNeuron):
+        return som_neuron_to_nir(node)
+    else:
+        raise TypeError(f"Unsupported node type {type(node)}")
 
 def nir_to_spicenet(
         nir_spicenet: nir.SPICENet,
@@ -83,20 +156,22 @@ def som_neuron_to_nir(spicenet_som_neuron: SpiceNetSom.SomNeuron) -> nir.SPICEne
 def nir_to_som_neuron(nir_spicenet_som_neuron: nir.SPICEnetSOMNeuron) -> SpiceNetSom.SomNeuron:
     return SpiceNetSom.SomNeuron(nir_spicenet_som_neuron.mean.item(), nir_spicenet_som_neuron.std.item())
 
-def export_to_hdf5(filepath: str , spicenet: SpiceNet):
+def export_to_hdf5(filepath: str , nodes: SpiceTypes | list[SpiceTypes]):
     """Exports a SPICEnet to a HDF5 file."""
     
-    nir_spicenet = spicenet_to_nir(spicenet)
-    nir.write(filepath, nir_spicenet)
+    nir_graph = to_nir(nodes)
+    nir.write(filepath, nir_graph)
     
 def read_from_hdf5(
         filepath: str,
-        som_lrf_tuning_curve: LearningRateFunction,
-        som_lrf_interaction_kernel: LearningRateFunction,
-        hcm_lrf_weights: LearningRateFunction,
-        hcm_trust_of_new: LearningRateFunction
+        som_1: SpiceNetSom = None,
+        som_2: SpiceNetSom = None,
+        som_lrf_tuning_curve: LearningRateFunction = None,
+        som_lrf_interaction_kernel: LearningRateFunction = None,
+        hcm_lrf_weights: LearningRateFunction = None,
+        hcm_trust_of_new: LearningRateFunction = None
     ) -> SpiceNet:
     """Reads a SPICEnet from a HDF5 file."""
     
     nir_spicenet = nir.read(filepath)
-    return nir_to_spicenet(nir_spicenet, som_lrf_tuning_curve, som_lrf_interaction_kernel, hcm_lrf_weights, hcm_trust_of_new)
+    return from_nir(nir_spicenet, som_1, som_2, som_lrf_tuning_curve, som_lrf_interaction_kernel, hcm_lrf_weights, hcm_trust_of_new)
