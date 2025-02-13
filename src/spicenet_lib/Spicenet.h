@@ -19,6 +19,14 @@
 #include "SpicenetSomBase.h"
 #include "SpicenetHcm.h"
 #include "Optimizer.h"
+#include "SpicenetLogging.h"
+
+#ifdef SPICENET_LOGGING
+
+#include <Arduino.h>
+
+#endif
+
 
 enum Decoder {
     NAIVE,
@@ -39,11 +47,12 @@ public:
     Spicenet(SpicenetHcm<T> *hcm, const std::array<SpicenetSomBase<T> *, D> &soms);
 
     // TODO:  uint32_t batchSize
-    void fit(const std::list<std::list<std::vector<T>>> &inputData,
+    bool fit(const std::list<std::list<std::vector<T>>> &inputData,
              uint16_t epochsOnBatch,
              void (*iterationCallback)(uint64_t iteration) = nullptr);
 
-    T decode(uint8_t targetSom, const std::map<uint8_t, std::vector<T>> &inputValues, Decoder decoder = BERT_OPTIMIZER);
+    bool tryDecode(uint8_t targetSom, const std::map<uint8_t, std::vector<T>> &inputValues, T &result,
+                   Decoder decoder = BERT_OPTIMIZER);
 };
 
 template<typename T, uint8_t D>
@@ -62,21 +71,27 @@ Spicenet<T, D>::Spicenet(SpicenetHcm<T> *hcm, const std::array<SpicenetSomBase<T
 }
 
 template<typename T, uint8_t D>
-void Spicenet<T, D>::fit(const std::list<std::list<std::vector<T>>> &inputData,
+bool Spicenet<T, D>::fit(const std::list<std::list<std::vector<T>>> &inputData,
                          uint16_t epochsOnBatch,
                          void (*iterationCallback)(uint64_t)) {
     if (inputData.size() != D) {
-        throw std::invalid_argument("Spicenet fit: the amount of data columns is unequal to the amount of soms");
+#ifdef SPICENET_LOGGING
+        LOG_LN("Spicenet fit: the amount of data columns is unequal to the amount of soms");
+#endif
+        return false;
     }
     auto it = inputData.begin();
     unsigned int dataCount = it->size();
     for (++it; it != inputData.end(); ++it) {
         if (it->size() != dataCount) {
-            throw std::invalid_argument("Spicenet fit: not all lists contain an equal amount of data");
+#ifdef SPICENET_LOGGING
+            LOG_LN("Spicenet fit: not all lists contain an equal amount of data");
+#endif
+            return false;
         }
     }
     if (dataCount <= 0) {
-        return;
+        return true;
     }
 
     std::vector<typename std::list<std::vector<T>>::const_iterator> colIterators(inputData.size());
@@ -102,6 +117,11 @@ void Spicenet<T, D>::fit(const std::list<std::list<std::vector<T>>> &inputData,
             colIterators.at(colCounter) = col.begin();
             ++colCounter;
         }
+#ifdef SPICENET_LOGGING
+        LOG_LN("");
+        LOG_LN("Start HCM training");
+        unsigned int iteration = 0;
+#endif
         for (unsigned int row = 0; row < dataCount; ++row) {
             std::list<std::list<std::vector<T>>> activations;
             somNumber = 0;
@@ -110,15 +130,28 @@ void Spicenet<T, D>::fit(const std::list<std::list<std::vector<T>>> &inputData,
                 stuff.push_back(soms.at(somNumber)->activation(*iterator));
                 activations.push_back(stuff);
                 std::advance(iterator, 1);
+                ++somNumber;
             }
 
             this->hcm->fit(activations, 1);
+#ifdef SPICENET_LOGGING
+            LOG("SOM trainings iterations");
+            LOG("HCM fit data: ");
+            LOG(iteration);
+            LOG('\r');
+            ++iteration;
+#endif
         }
     }
+#ifdef SPICENET_LOGGING
+    LOG_LN("");
+#endif
+    return true;
 }
 
 template<typename T, uint8_t D>
-T Spicenet<T, D>::decode(uint8_t targetSom, const std::map<uint8_t, std::vector<T>> &inputValues, Decoder decoder) {
+bool Spicenet<T, D>::tryDecode(uint8_t targetSom, const std::map<uint8_t, std::vector<T>> &inputValues, T &result,
+                               Decoder decoder) {
     // TODO: hier auch validieren?
     for (uint8_t i = 0; i < this->soms.size(); ++i) {
         if (i == targetSom) {
@@ -126,8 +159,11 @@ T Spicenet<T, D>::decode(uint8_t targetSom, const std::map<uint8_t, std::vector<
         }
         if (inputValues.find(i) == inputValues.end()) {
             std::stringstream ss;
-            ss << "Spicenet decode: for som " << std::to_string(i) << " is no activation given";
-            throw std::invalid_argument(ss.str());
+            ss << "Spicenet tryDecode: for som " << std::to_string(i) << " is no activation given";
+#ifdef SPICENET_LOGGING
+            LOG_LN(ss.str().c_str());
+#endif
+            return false;
         }
     }
 
@@ -140,19 +176,11 @@ T Spicenet<T, D>::decode(uint8_t targetSom, const std::map<uint8_t, std::vector<
         inputActivations[i] = temp;
     }
 
-    /*
-    auto test = this->hcm->calculateShouldPattern(targetSom, inputActivations);
-    for(auto temp: test){
-        Serial.print(temp);
-        Serial.print(" ");
-    }
-    Serial.println();
-     */
     std::vector<T> shouldActivationNormed = normVector(this->hcm->calculateShouldPattern(targetSom, inputActivations));
     int winningIndex = std::distance(shouldActivationNormed.begin(),
                                      std::max_element(shouldActivationNormed.begin(), shouldActivationNormed.end()));
 
-    auto targetSomInstance = this->soms.at(targetSom);
+    SpicenetSomBase<T> *targetSomInstance = this->soms.at(targetSom);
 
     auto fn = [&](T x) {
         T sum = 0;
@@ -166,10 +194,14 @@ T Spicenet<T, D>::decode(uint8_t targetSom, const std::map<uint8_t, std::vector<
     std::tuple<T, T> searchRange;
     switch (decoder) {
         case Decoder::BERT_OPTIMIZER:
-            searchRange = targetSomInstance->getDecodingBoundaries(winningIndex);
-            return approximateLocalMin<T>(std::get<0>(searchRange), std::get<1>(searchRange), fn);
+            T start, end;
+            if (targetSomInstance->tryGetDecodingBoundaries(winningIndex, start, end)) {
+                result = approximateLocalMin<T>(start, end, fn);
+                return true;
+            }
+            return false;
         case Decoder::NAIVE:
-            break;
+            return false;
     }
 
 }

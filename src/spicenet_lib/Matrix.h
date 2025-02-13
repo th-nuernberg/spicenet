@@ -21,7 +21,7 @@ private:
 
     size_t indexToOffset(const std::vector<uint16_t> &indizes);
 
-    void checkShapeBounds(const std::vector<uint16_t> &indizes);
+    bool checkShapeBounds(const std::vector<uint16_t> &indizes);
 
 public:
     ~Matrix();
@@ -38,7 +38,7 @@ public:
 
     T getField(const std::vector<uint16_t> &indizes);
 
-    void setField(const std::vector<uint16_t> &indizes, T value);
+    bool setField(const std::vector<uint16_t> &indizes, T value);
 };
 
 template<typename T>
@@ -61,7 +61,9 @@ template<typename T>
 Matrix<T>::Matrix(const std::vector<uint16_t> &shape, T *data) {
     // TODO: change data to vector for memory safety
     if (shape.empty()) {
-        throw std::invalid_argument("No values in matrix shape");
+#ifdef SPICENET_LOGGING
+        LOG_LN("Warning: No values in matrix shape");
+#endif
     }
     this->shape = std::vector<uint16_t>(shape);
     for (auto dimSize: shape) {
@@ -89,19 +91,23 @@ Matrix<T>::~Matrix() {
 
 template<typename T>
 T Matrix<T>::getField(const std::vector<uint16_t> &indizes) {
-    checkShapeBounds(indizes);
+    if (!checkShapeBounds(indizes)){
+        return std::numeric_limits<T>::max();
+    }
     return this->data[indexToOffset(indizes)];
 }
 
 template<typename T>
-void Matrix<T>::setField(const std::vector<uint16_t> &indizes, T value) {
-    checkShapeBounds(indizes);
+bool Matrix<T>::setField(const std::vector<uint16_t> &indizes, T value) {
+    if (!checkShapeBounds(indizes)){
+        return false;
+    }
     this->data[indexToOffset(indizes)] = value;
+    return true;
 }
 
 template<typename T>
 size_t Matrix<T>::indexToOffset(const std::vector<uint16_t> &indizes) {
-    // TODO: double check
     size_t offset = 0;
     size_t multiplier = 1;
 
@@ -114,15 +120,24 @@ size_t Matrix<T>::indexToOffset(const std::vector<uint16_t> &indizes) {
 }
 
 template<typename T>
-void Matrix<T>::checkShapeBounds(const std::vector<uint16_t> &indizes) {
+bool Matrix<T>::checkShapeBounds(const std::vector<uint16_t> &indizes) {
     if (indizes.size() != this->shape.size()) {
-        throw std::invalid_argument("The shape of the indizes not matching the matrix");
+#ifdef SPICENET_LOGGING
+        LOG_LN("The shape of the indizes not matching the matrix");
+#endif
+        return false;
     }
     for (int i = 0; i < this->shape.size(); ++i) {
         if (indizes.at(i) >= shape.at(i)) {
-            throw std::invalid_argument("Illegal index in dimension " + std::to_string(i));
+#ifdef SPICENET_LOGGING
+            std::stringstream ss;
+            ss << "Illegal index in dimension " << std::to_string(i);
+            LOG_LN(ss.str().c_str());
+#endif
+            return false;
         }
     }
+    return true;
 }
 /*
 template<typename T>

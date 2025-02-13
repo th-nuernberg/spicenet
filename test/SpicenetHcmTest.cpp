@@ -22,11 +22,10 @@ TEST(SpicenetHcmTestSuite, FitMallformedTrainingData_NotEnoughMappings) {
     auto hcm = SpicenetHcm<float_t>({1, 1}, weightsLrf, trustOfNewLrf);
 
     // Act
+    bool result = hcm.fit(data, 0);
+
     // Assert
-    EXPECT_THAT([&]() { hcm.fit(data, 0); },
-                testing::Throws<std::invalid_argument>(testing::Property(&std::invalid_argument::what,
-                                                                         testing::HasSubstr(
-                                                                                 "SpicenetHcm fit: the amount of activation lists is unequal to the amount of soms"))));
+    EXPECT_EQ(false, result);
 }
 
 TEST(SpicenetHcmTestSuite, FitMallformedTrainingData_ToManyMappings) {
@@ -47,11 +46,10 @@ TEST(SpicenetHcmTestSuite, FitMallformedTrainingData_ToManyMappings) {
     auto hcm = SpicenetHcm<float_t>({1, 1}, weightsLrf, trustOfNewLrf);
 
     // Act
+    bool result = hcm.fit(data, 0);
+
     // Assert
-    EXPECT_THAT([&]() { hcm.fit(data, 0); },
-                testing::Throws<std::invalid_argument>(testing::Property(&std::invalid_argument::what,
-                                                                         testing::HasSubstr(
-                                                                                 "SpicenetHcm fit: the amount of activation lists is unequal to the amount of soms"))));
+    EXPECT_EQ(false, result);
 }
 
 TEST(SpicenetHcmTestSuite, FitMallformedTrainingData_UnequalActivationAmount) {
@@ -73,11 +71,10 @@ TEST(SpicenetHcmTestSuite, FitMallformedTrainingData_UnequalActivationAmount) {
     auto hcm = SpicenetHcm<float_t>({1, 1, 1}, weightsLrf, trustOfNewLrf);
 
     // Act
+    bool result = hcm.fit(data, 0);
+
     // Assert
-    EXPECT_THAT([&]() { hcm.fit(data, 0); },
-                testing::Throws<std::invalid_argument>(testing::Property(&std::invalid_argument::what,
-                                                                         testing::HasSubstr(
-                                                                                 "SpicenetHcm fit: not all lists contain an equal amount of activations"))));
+    EXPECT_EQ(false, result);
 }
 
 TEST(SpicenetHcmTestSuite, FitMallformedTrainingData_UnequalActivationAmount2) {
@@ -99,11 +96,10 @@ TEST(SpicenetHcmTestSuite, FitMallformedTrainingData_UnequalActivationAmount2) {
     auto hcm = SpicenetHcm<float_t>({1, 1, 1}, weightsLrf, trustOfNewLrf);
 
     // Act
+    bool result = hcm.fit(data, 0);
+
     // Assert
-    EXPECT_THAT([&]() { hcm.fit(data, 0); },
-                testing::Throws<std::invalid_argument>(testing::Property(&std::invalid_argument::what,
-                                                                         testing::HasSubstr(
-                                                                                 "SpicenetHcm fit: not all lists contain an equal amount of activations"))));
+    EXPECT_EQ(false, result);
 }
 
 TEST(SpicenetHcmTestSuite, FitMallformedTrainingData_UnequalActivationAmount3) {
@@ -125,11 +121,10 @@ TEST(SpicenetHcmTestSuite, FitMallformedTrainingData_UnequalActivationAmount3) {
     auto hcm = SpicenetHcm<float_t>({1, 1, 1}, weightsLrf, trustOfNewLrf);
 
     // Act
+    bool result = hcm.fit(data, 0);
+
     // Assert
-    EXPECT_THAT([&]() { hcm.fit(data, 0); },
-                testing::Throws<std::invalid_argument>(testing::Property(&std::invalid_argument::what,
-                                                                         testing::HasSubstr(
-                                                                                 "SpicenetHcm fit: not all lists contain an equal amount of activations"))));
+    EXPECT_EQ(false, result);
 }
 
 TEST(SpicenetHcmTestSuite, Fit2D) {
@@ -213,6 +208,29 @@ TEST(SpicenetHcmTestSuite, Fit3D) {
     hcm.fit(data, 1);
 
     // Assert
+}
+
+TEST(SpicenetHcmTestSuite, FitSuccessfullReturnsTrue) {
+    // Arrange
+    auto weightsLrf = [](uint64_t x) -> float {
+        trainingIterationTestCounter = x;
+        return 0.8;
+    };
+    auto trustOfNewLrf = [](uint64_t x) -> float { return 0.8; };
+
+
+    std::list<std::list<std::vector<float_t>>> data;
+    std::list<std::vector<float_t>> a1 = {{0.2}};
+    std::list<std::vector<float_t>> a2 = {{0.9}};
+    data.push_back(a1);
+    data.push_back(a2);
+    auto hcm = SpicenetHcm<float_t>({1, 1}, weightsLrf, trustOfNewLrf);
+
+    // Act
+    bool result = hcm.fit(data, 1);
+
+    // Assert
+    EXPECT_EQ(result, true);
 }
 
 TEST(SpicenetHcmTestSuite, Fit2Epochs) {
@@ -303,7 +321,8 @@ TEST(SpicenetHcmTestSuite, ShouldCalculationRightValues) {
     auto result = hcm.calculateShouldPattern(2, activation);
 
     // Assert
-    ASSERT_THAT(result, ::testing::ElementsAre(112.85, 196.57, 39.29));
+    ASSERT_THAT(result,
+                ::testing::ElementsAre(testing::FloatEq(112.85), testing::FloatEq(198.19), testing::FloatEq(40.91)));
 }
 
 TEST(SpicenetHcmTestSuite, MissingSecondDim) {
@@ -324,11 +343,9 @@ TEST(SpicenetHcmTestSuite, MissingSecondDim) {
     };;
 
     // Act
-    // Assert
-    EXPECT_THAT([&]() { hcm.calculateShouldPattern(2, activation); },
-                testing::Throws<std::invalid_argument>(testing::Property(&std::invalid_argument::what,
-                                                                         testing::HasSubstr(
-                                                                                 "SpicenetHcm calculateShouldPattern: for dimension 1 is no activation given"))));
+    auto result = hcm.calculateShouldPattern(2, activation);
 
+    // Assert
+    EXPECT_TRUE(result.empty());
 }
 

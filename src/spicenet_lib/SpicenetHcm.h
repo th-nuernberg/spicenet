@@ -9,6 +9,10 @@
 #include "SpicenetSom.h"
 #include "Matrix.h"
 #include "VectorMath.h"
+#include "SpicenetLogging.h"
+#ifdef SPICENET_LOGGING
+#include <Arduino.h>
+#endif
 
 template<typename T>
 class SpicenetHcm {
@@ -31,7 +35,7 @@ public:
 
     ~SpicenetHcm();
 
-    void fit(const std::list<std::list<std::vector<T>>> &inputActivations, uint16_t epochs);
+    bool fit(const std::list<std::list<std::vector<T>>> &inputActivations, uint16_t epochs);
 
     Matrix<T> *getMatrix();
 
@@ -88,7 +92,10 @@ std::vector<T> SpicenetHcm<T>::calculateShouldPattern(uint8_t targetSom,
             std::stringstream ss;
             ss << "SpicenetHcm calculateShouldPattern: for dimension " << std::to_string(i)
                << " is no activation given";
-            throw std::invalid_argument(ss.str());
+#ifdef SPICENET_LOGGING
+            LOG_LN(ss.str().c_str());
+#endif
+            return {};
         }
     }
     std::vector<T> result(this->weights->getShape().at(targetSom), 0);
@@ -111,20 +118,26 @@ std::vector<T> SpicenetHcm<T>::calculateShouldPattern(uint8_t targetSom,
 
 
 template<typename T>
-void SpicenetHcm<T>::fit(const std::list<std::list<std::vector<T>>> &inputActivations, uint16_t epochs) {
-    // TODO: switch to generator for activations
+bool SpicenetHcm<T>::fit(const std::list<std::list<std::vector<T>>> &inputActivations, uint16_t epochs) {
+    // TODO: switch to iterators instead of lists
     if (inputActivations.size() != this->somCount) {
-        throw std::invalid_argument("SpicenetHcm fit: the amount of activation lists is unequal to the amount of soms");
+#ifdef SPICENET_LOGGING
+        LOG_LN("SpicenetHcm fit: the amount of activation lists is unequal to the amount of soms");
+#endif
+        return false;
     }
     auto it = inputActivations.begin();
     unsigned int dataCount = it->size();
     for (++it; it != inputActivations.end(); ++it) {
         if (it->size() != dataCount) {
-            throw std::invalid_argument("SpicenetHcm fit: not all lists contain an equal amount of activations");
+#ifdef SPICENET_LOGGING
+            LOG_LN("SpicenetHcm fit: not all lists contain an equal amount of activations");
+#endif
+            return false;
         }
     }
     if (dataCount <= 0) {
-        return;
+        return true;
     }
 
     std::vector<std::vector<T>> tempsDiffBarActivation(this->somCount);
@@ -169,6 +182,7 @@ void SpicenetHcm<T>::fit(const std::list<std::list<std::vector<T>>> &inputActiva
             ++(this->trainingIteration);
         }
     }
+    return true;
 }
 
 #endif //SPICENETHCM_H

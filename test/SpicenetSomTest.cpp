@@ -46,25 +46,6 @@ TEST(SpicenetSomTestSuite, InitSomPrefferedValue2D) {
     EXPECT_FLOAT_EQ(nodes[2].preferredValue[1], 0.833333373);
 }
 
-
-TEST(SpicenetSomTestSuite, ToTableString) {
-    // Arrange
-    SpicenetSomNode<float_t, 1> nodes[2];
-    nodes[0].tuningCurveWidth = 0.8;
-    nodes[0].preferredValue[0] = 1;
-
-    auto spicenetSom = SpicenetSom<float_t, 1>(nodes,
-                                               2,
-                                               [](auto x) -> float_t { return 0.0; },
-                                               [](auto x) -> float_t { return 0.0; });
-
-    // Act
-    auto result = spicenetSom.toTableString();
-
-    // Assert
-    EXPECT_EQ(result, "Table");
-}
-
 static uint64_t trainingIterationTestCounter = 0;
 
 TEST(SpicenetSomTestSuite, FitTest) {
@@ -109,9 +90,10 @@ TEST(SpicenetSomTestSuite, FitTest) {
                                                (Lrf) interactionKernelLrf);
 
     // Act
-    spicenetSom.fit(trainingData, 2);
+    bool result  = spicenetSom.fit(trainingData, 2);
 
     // Assert
+    EXPECT_EQ(result, true);
     EXPECT_EQ(nodes[0].tuningCurveWidth, resultingNodes[0].tuningCurveWidth);
     EXPECT_EQ(nodes[1].tuningCurveWidth, resultingNodes[1].tuningCurveWidth);
     EXPECT_EQ(nodes[0].preferredValue[0], resultingNodes[0].preferredValue[0]);
@@ -147,14 +129,10 @@ TEST(SpicenetSomTestSuite, FitMallformedDataTest) {
                                                (Lrf) interactionKernelLrf);
 
     // Act
-    EXPECT_THROW({
-                     spicenetSom.fit(trainingData, 2);
-                 }, std::invalid_argument);
-    EXPECT_THAT([&]() { spicenetSom.fit(trainingData, 2); },
-                testing::Throws<std::invalid_argument>(testing::Property(&std::invalid_argument::what,
-                                                                         testing::HasSubstr(
-                                                                                 "SpicenetSom fit: data size mismatch, a vector has 2 values instead of the expected 1"))));
+    bool result = spicenetSom.fit(trainingData, 2);
+
     // Assert
+    EXPECT_EQ(false, result);
 }
 
 TEST(SpicenetSomTestSuite, FitMallformedDataTest_2) {
@@ -184,14 +162,10 @@ TEST(SpicenetSomTestSuite, FitMallformedDataTest_2) {
                                                (Lrf) interactionKernelLrf);
 
     // Act
-    EXPECT_THROW({
-                     spicenetSom.fit(trainingData, 2);
-                 }, std::invalid_argument);
-    EXPECT_THAT([&]() { spicenetSom.fit(trainingData, 2); },
-                testing::Throws<std::invalid_argument>(testing::Property(&std::invalid_argument::what,
-                                                                         testing::HasSubstr(
-                                                                                 "SpicenetSom fit: data size mismatch, a vector has 0 values instead of the expected 1"))));
+    bool result = spicenetSom.fit(trainingData, 2);
+
     // Assert
+    EXPECT_EQ(false, result);
 }
 
 TEST(SpicenetSomTestSuite, ActivationTest) {

@@ -56,19 +56,6 @@ TEST(MatrixTestSuite, SetValue) {
     EXPECT_EQ(9.0, result);
 }
 
-TEST(MatrixTestSuite, TestToBigSize) {
-    // Arrange
-    // Act
-    // Assert
-    EXPECT_THAT([&]() {
-        Matrix<float_t> matrix(
-                std::vector<uint16_t>{USHRT_MAX, USHRT_MAX, USHRT_MAX, USHRT_MAX});
-    },
-                testing::Throws<std::invalid_argument>(testing::Property(&std::invalid_argument::what,
-                                                                         testing::HasSubstr(
-                                                                                 "Matrix size overflow, the shape is to large! Shape: (65535, 2)"))));
-}
-
 TEST(MatrixTestSuite, InitValue) {
     // Arrange
 

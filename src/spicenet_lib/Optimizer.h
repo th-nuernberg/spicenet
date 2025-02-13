@@ -11,25 +11,37 @@
 
 #define SPICENET_OPTIMIZER_EPS 1.1e-16
 
-#include <stdexcept>
+#include <limits>
+
+#include "SpicenetLogging.h"
+
+#ifdef SPICENET_LOGGING
+
+#include <Arduino.h>
+
+#endif
+
+template<typename T>
+T approximateLocalMin(T intervalStart,
+                      T intervalEnd,
+                      const std::function<T(T)> &function);
 
 template<typename T>
 T approximateLocalMin(const T intervalStart,
                       const T intervalEnd,
-                      const std::function<T(T)>& function);
-
-template<typename T>
-T approximateLocalMin(const T intervalStart,
-                      const T intervalEnd,
-                      const std::function<T(T)>& function) {
+                      const std::function<T(T)> &function) {
     static_assert(std::is_integral<T>::value || std::is_floating_point<T>::value,
                   "vectorScalarMultiplication: T must be a numeric type!");
 
     T e, d, tol, xm, s, p, q, r, min1, min2;
 
     const T tolerance = abs((1.0e-6) * (intervalStart + intervalEnd) / 2.0);
-    if (tolerance < 0.0){
-        throw std::invalid_argument("approximateLocalMin: Tolerance must be positive."); // TODO: hier passt was noch nicht, was wenn range komplett im negativen liegt
+    if (tolerance < 0.0) {
+#ifdef SPICENET_LOGGING
+        LOG_LN("approximateLocalMin: Tolerance must be positive.");
+#endif
+        return std::numeric_limits<T>::max();
+        // TODO: hier passt was noch nicht, was wenn range komplett im negativen liegt
     }
 
     T currentStart = intervalStart;
@@ -57,7 +69,7 @@ T approximateLocalMin(const T intervalStart,
         }
         tol = 2.0 * SPICENET_OPTIMIZER_EPS * abs(currentEnd) + 0.5 * tolerance;
         xm = 0.5 * (c - currentEnd);
-        if((abs(xm) <= tol) || (fxEnd == 0.0)){
+        if ((abs(xm) <= tol) || (fxEnd == 0.0)) {
             return currentEnd;
         }
         if ((abs(e) >= tol) && (abs(fxStart) > abs(fxEnd))) {
@@ -98,7 +110,11 @@ T approximateLocalMin(const T intervalStart,
         }
         fxEnd = function(currentEnd);
     }
-    throw std::runtime_error("approximateLocalMin: This should not happen. Check your values and think about increasing the allowed iterations.");
+#ifdef SPICENET_LOGGING
+    LOG_LN("approximateLocalMin: This should not happen. Check your values and think about increasing the allowed iterations.");
+#endif
+    return std::numeric_limits<T>::max();
+    // throw std::runtime_error("approximateLocalMin: This should not happen. Check your values and think about increasing the allowed iterations.");
 }
 
 #endif //SPICENET_CPP_OPTIMIZER_H

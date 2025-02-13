@@ -28,6 +28,29 @@ TEST(SpicenetSomNodeTestSuite, UpdateNode) {
     EXPECT_EQ(node.tuningCurveWidth, newTuningCurveWidth);
 }
 
+TEST(SpicenetSomNodeTestSuite, UpdateNode2D) {
+    // Arrange
+    auto node = SpicenetSomNode<float_t, 2>();
+    node.tuningCurveWidth = 0.8;
+    node.preferredValue[0] = 1;
+    node.preferredValue[1] = 1;
+
+    float_t inputValue[2] = {1.1, 1.1};
+
+    // Act
+    node.updateNode(inputValue,
+                    0.7,
+                    0.3,
+                    1);
+
+    // Assert
+    float_t newPreferredValue = 0.0002706144098 + 1.0;
+    float_t newTuningCurveWidth = -0.001704870782 + 0.8;
+    EXPECT_EQ(node.preferredValue[0], newPreferredValue);
+    EXPECT_EQ(node.preferredValue[1], newPreferredValue);
+    EXPECT_EQ(node.tuningCurveWidth, newTuningCurveWidth);
+}
+
 TEST(SpicenetSomNodeTestSuite, ActivationOfNode) {
     // Arrange
     auto node = SpicenetSomNode<double_t, 1>();

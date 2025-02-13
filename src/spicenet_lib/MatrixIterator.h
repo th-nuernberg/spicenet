@@ -37,11 +37,7 @@ bool MatrixIterator<T>::next(std::vector<uint16_t> &index, T *&position) {
     if (this->remainingSteps == 0) {
         return false;
     }
-    /*
-    if (index.size() != this->shape.size()) {
-        throw std::invalid_argument("MatrixIterator next: index size not same as shape size");
-    }
-     */
+
     index.assign(currentIndex.begin(), currentIndex.end());
     position = currentPosition;
     ++currentPosition;

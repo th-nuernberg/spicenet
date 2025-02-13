@@ -24,7 +24,10 @@ inline std::vector<T> vectorAddition(const std::vector<T> &a, const std::vector<
     static_assert(std::is_integral<T>::value || std::is_floating_point<T>::value,
                   "vectorAddition: T must be a numeric type!");
     if (a.size() != b.size()) {
-        throw std::invalid_argument("vectorAddition: both vectors need to have the same size");
+#ifdef SPICENET_LOGGING
+        LOG_LN("vectorAddition: both vectors need to have the same size");
+#endif
+        return {};
     }
     std::vector<T> result(a);
     for (unsigned int i = 0; i < b.size(); ++i) {
@@ -45,7 +48,10 @@ inline std::vector<T> vectorSubtraction(const std::vector<T> &a, const std::vect
     static_assert(std::is_integral<T>::value || std::is_floating_point<T>::value,
                   "vectorSubtraction: T must be a numeric type!");
     if (a.size() != b.size()) {
-        throw std::invalid_argument("vectorSubtraction: both vectors need to have the same size");
+#ifdef SPICENET_LOGGING
+        LOG_LN("vectorSubtraction: both vectors need to have the same size");
+#endif
+        return {};
     }
     std::vector<T> result(a);
     for (unsigned int i = 0; i < b.size(); ++i) {

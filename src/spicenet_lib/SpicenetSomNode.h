@@ -46,16 +46,14 @@ void SpicenetSomNode<T, D>::updateNode(
         const T learnRate,
         const T interactionKernelLearningRate,
         const uint16_t distanceToWinner) {
-    // FIXME: Position vom minus
     T interactionKernelValue = exp((-pow(distanceToWinner, 2)) / (2 * pow(interactionKernelLearningRate, 2)));
     T oldPreferredValue[D];
-    memcpy(oldPreferredValue, this->preferredValue, sizeof(T[D]) * D);
+    memcpy(oldPreferredValue, this->preferredValue, sizeof(T[D]));
     for (unsigned int i = 0; i < D; i++) {
         this->preferredValue[i] +=
                 learnRate * interactionKernelValue * (inputValue[i] - this->preferredValue[i]);
     }
 
-    // FIXME: wirklich mit altem preferred value rechnen?
     this->tuningCurveWidth += learnRate * interactionKernelValue * (
             pow(distanceBetweenPoints<T, D>(inputValue, oldPreferredValue), 2)
             - pow(this->tuningCurveWidth, 2)

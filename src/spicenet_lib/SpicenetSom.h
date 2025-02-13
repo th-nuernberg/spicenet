@@ -20,6 +20,14 @@
 #include "SpicenetLearningRateFunction.h"
 #include "SpicenetSomShape.h"
 #include "SpicenetSomBase.h"
+#include "SpicenetLogging.h"
+
+#ifdef SPICENET_LOGGING
+
+#include <Arduino.h>
+
+#endif
+
 
 template<typename T, size_t D>
 class SpicenetSom : public SpicenetSomBase<T> {
@@ -34,7 +42,6 @@ private:
     uint64_t trainingIteration = 0;
 
 public:
-    // TODO: rename tuning curve lrf to ?
     SpicenetSom(T valueRangeStart,
                 T valueRangeEnd,
                 size_t neuronCount,
@@ -54,11 +61,9 @@ public:
 
     uint64_t getTrainingIterations();
 
-    std::string toTableString();
+    bool fit(const std::list<std::vector<T> > &trainingData, uint16_t epochs) override;
 
-    void fit(const std::list<std::vector<T> > &trainingData, uint16_t epochs) override;
-
-    std::tuple<T, T> getDecodingBoundaries(unsigned int index) override;
+    bool tryGetDecodingBoundaries(unsigned int index, T &start, T &end) override;
 
     std::vector<T> activation(const T (&data)[D]);
 
@@ -66,19 +71,33 @@ public:
 };
 
 template<typename T, size_t D>
-std::tuple<T, T> SpicenetSom<T, D>::getDecodingBoundaries(unsigned int index) {
-    if (D != 1){
-        throw std::invalid_argument("SpicenetSom getDecodingBoundaries: this som has to many dimensions for decoding");
+bool SpicenetSom<T, D>::tryGetDecodingBoundaries(unsigned int index, T &start, T &end) {
+    if (D != 1) {
+#ifdef SPICENET_LOGGING
+        LOG_LN("SpicenetSom tryGetDecodingBoundaries: this som has to many dimensions for decoding");
+#endif
+        return false;
     }
-    unsigned int startIndex, endIndex;
-    startIndex = index > 0 ? index - 1 : index;
-    endIndex = index < this->nodesCount ? index + 1 : index;
-    return std::tuple<T, T>(this->nodes[startIndex].preferredValue[0], this->nodes[endIndex].preferredValue[0]);
+    if (index > 0) {
+        start = this->nodes[index - 1].preferredValue[0];
+    } else {
+        start = this->nodes[index].preferredValue[0];
+        start -= abs(this->nodes[index].tuningCurveWidth * 2.0);
+    }
+
+    if (index < this->nodesCount) {
+        end = this->nodes[index + 1].preferredValue[0];
+    } else {
+        end = this->nodes[index].preferredValue[0];
+        end += abs(this->nodes[index].tuningCurveWidth * 2.0);
+    }
+
+    return true;
 }
 
 template<typename T, size_t D>
 SpicenetSomShape SpicenetSom<T, D>::getShape() {
-    return {.nodes = this->nodesCount, .dimensions = D};
+    return {.dimensions = D, .nodes = this->nodesCount};
 }
 
 template<typename T, size_t D>
@@ -124,23 +143,18 @@ SpicenetSom<T, D>::SpicenetSom(SpicenetSomNode<T, D> *nodes,
                                                           isSelfManaged(false) {
 }
 
-
 template<typename T, size_t D>
-std::string SpicenetSom<T, D>::toTableString() {
-    for (int i = 0; i < nodesCount; ++i) {
-    }
-    return "";
-}
-
-template<typename T, size_t D>
-void SpicenetSom<T, D>::fit(const std::list<std::vector<T> > &trainingData, const uint16_t epochs) {
+bool SpicenetSom<T, D>::fit(const std::list<std::vector<T> > &trainingData, const uint16_t epochs) {
     T currentData[D];
     for (auto &data: trainingData) {
         if (data.size() != D) {
             std::stringstream ss;
             ss << "SpicenetSom fit: data size mismatch, a vector has " << data.size()
                << " values instead of the expected " << D;
-            throw std::invalid_argument(ss.str());
+#ifdef SPICENET_LOGGING
+            LOG_LN(ss.str().c_str());
+#endif
+            return false;
         }
     }
 
@@ -157,18 +171,30 @@ void SpicenetSom<T, D>::fit(const std::list<std::vector<T> > &trainingData, cons
                                           this->interactionLrf(this->trainingIteration),
                                           abs(static_cast<int>(j) - static_cast<int>(indexMaxElement)));
             }
+#ifdef SPICENET_LOGGING
+            LOG("SOM trainings iterations");
+            LOG(this->trainingIteration);
+            LOG('\r');
+#endif
             ++this->trainingIteration;
         }
     }
+#ifdef SPICENET_LOGGING
+    LOG_LN("");
+#endif
+    return true;
 }
 
 template<typename T, size_t D>
 std::vector<T> SpicenetSom<T, D>::activation(const std::vector<T> &data) {
     if (data.size() != D) {
-        throw std::invalid_argument("SpicenetSom activation: input data size unequal to dimensions");
+#ifdef SPICENET_LOGGING
+        LOG_LN("SpicenetSom activation: input data size unequal to dimensions");
+#endif
+        return {};
     }
     T inputArr[D];
-    std::copy(data.begin(), data.end(), inputArr); // TODO: nötig?
+    std::copy(data.begin(), data.end(), inputArr);
     return activation(inputArr);
 }
 
