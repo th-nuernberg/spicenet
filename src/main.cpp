@@ -6,8 +6,14 @@
 #ifdef BASIC_TEST
 #include "examples/BasicExample.h"
 #endif
+#ifdef BASIC_WITH_ERROR_TEST
+#include "examples/BasicTestWithError.h"
+#endif
 #ifdef T2D_SOM_TEST
 #include "examples/2dSomExample.h"
+#endif
+#ifdef T3D_HCM_TEST
+#include "examples/3DTest.h"
 #endif
 
 const String title = "   _____ _____ _____ _____ ______            _   \n"
@@ -36,7 +42,6 @@ void display_freeram() {
 }
 
 
-
 void setup() {
     Serial.begin(9600);
     delay(5000);
@@ -49,11 +54,22 @@ void setup() {
 #ifdef T2D_SOM_TEST
     runTest();
 #endif
+#ifdef BASIC_WITH_ERROR_TEST
+    runTest();
+#endif
+#ifdef T3D_HCM_TEST
+    runTest();
+#endif
 
     randomSeed(42);
+    pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void loop() {
+    digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
+    delay(1000);                      // wait for a second
+    digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
+    delay(1000);                      // wait for a second
     /*
     Serial.println("Doing stuff");
     float rnd = (float) random(-100000, 100000) / (float) 100000.0;

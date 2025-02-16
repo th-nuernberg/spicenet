@@ -112,6 +112,10 @@ T approximateLocalMin(const T intervalStart,
     }
 #ifdef SPICENET_LOGGING
     LOG_LN("approximateLocalMin: This should not happen. Check your values and think about increasing the allowed iterations.");
+    LOG("Start: ");
+    LOG_LN(intervalStart);
+    LOG("End: ");
+    LOG_LN(intervalEnd);
 #endif
     return std::numeric_limits<T>::max();
     // throw std::runtime_error("approximateLocalMin: This should not happen. Check your values and think about increasing the allowed iterations.");

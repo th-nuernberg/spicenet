@@ -14,7 +14,6 @@
 #include <list>
 #include <algorithm>
 #include <sstream>
-#include <stdexcept>
 
 #include "SpicenetSomNode.h"
 #include "SpicenetLearningRateFunction.h"
@@ -85,7 +84,7 @@ bool SpicenetSom<T, D>::tryGetDecodingBoundaries(unsigned int index, T &start, T
         start -= abs(this->nodes[index].tuningCurveWidth * 2.0);
     }
 
-    if (index < this->nodesCount) {
+    if (index < this->nodesCount - 1) {
         end = this->nodes[index + 1].preferredValue[0];
     } else {
         end = this->nodes[index].preferredValue[0];
@@ -148,10 +147,10 @@ bool SpicenetSom<T, D>::fit(const std::list<std::vector<T> > &trainingData, cons
     T currentData[D];
     for (auto &data: trainingData) {
         if (data.size() != D) {
+#ifdef SPICENET_LOGGING
             std::stringstream ss;
             ss << "SpicenetSom fit: data size mismatch, a vector has " << data.size()
                << " values instead of the expected " << D;
-#ifdef SPICENET_LOGGING
             LOG_LN(ss.str().c_str());
 #endif
             return false;

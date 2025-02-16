@@ -7,7 +7,6 @@
 
 #include <cstdint>
 #include <vector>
-#include <stdexcept>
 #include <sstream>
 #include "MatrixIterator.h"
 

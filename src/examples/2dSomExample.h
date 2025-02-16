@@ -10,7 +10,6 @@
 #include "2dSomTestData.h"
 #include "spicenet_lib/RegressionMetrics.h"
 
-
 #define SOM_SIZE 100
 
 auto *spicenetSom1 = new SpicenetSom<float, 2>(-1,
@@ -42,7 +41,7 @@ void trainModel2dSom() {
     const auto startLoadData = millis();
     auto trainingsData = getTrainingsData3D();
     Serial.print("[Training]: finished loading test dataset in ");
-    Serial.print(millis() - startLoadData, 20);
+    Serial.print(millis() - startLoadData);
     Serial.println(" millis");
 
 
@@ -53,11 +52,11 @@ void trainModel2dSom() {
     Serial.print("[Training]: Trainset size ");
     Serial.println(trainingsData.begin()->size());
     const auto startTraining = millis();
-    spicenet.fit(trainingsData, 10);
+    spicenet.fit(trainingsData, 100);
     auto endTraining = millis();
     Serial.print("[Training]: Training finished ");
-    Serial.print((endTraining - startTraining) / 1000, 20);
-    Serial.println(" seconds");
+    Serial.print(endTraining - startTraining);
+    Serial.println(" millis");
 }
 
 void evaluateModel2dSom() {
@@ -79,7 +78,9 @@ void evaluateModel2dSom() {
         Serial.print(" / ");
         Serial.print(resultData.size());
         float prediction;
+        const auto start = millis();
         auto successful = spicenet.tryDecode(1, {{0, init}}, prediction);
+        const auto end = millis();
         if (successful) {
             predictedData.push_back(prediction);
         }
@@ -87,11 +88,13 @@ void evaluateModel2dSom() {
         Serial.print("                                                 ");
         Serial.print('\r');
         if (successful){
-            Serial.println(prediction, 20);
+            Serial.print(prediction, 20);
         }else{
-            Serial.println("error");
+            Serial.print("error");
         }
-
+        Serial.print(',');
+        Serial.print(end - start);
+        Serial.println();
         ++ind;
     }
     Serial.print("\r");

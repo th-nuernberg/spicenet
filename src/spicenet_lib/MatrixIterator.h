@@ -7,7 +7,6 @@
 
 #include <vector>
 #include <cstdint>
-#include <stdexcept>
 
 template<typename T>
 class MatrixIterator {

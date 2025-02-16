@@ -89,10 +89,10 @@ std::vector<T> SpicenetHcm<T>::calculateShouldPattern(uint8_t targetSom,
             continue;
         }
         if (inputActivations.find(i) == inputActivations.end()) {
+#ifdef SPICENET_LOGGING
             std::stringstream ss;
             ss << "SpicenetHcm calculateShouldPattern: for dimension " << std::to_string(i)
                << " is no activation given";
-#ifdef SPICENET_LOGGING
             LOG_LN(ss.str().c_str());
 #endif
             return {};

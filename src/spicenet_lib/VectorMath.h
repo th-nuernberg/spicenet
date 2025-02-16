@@ -6,7 +6,6 @@
 #define SPICENET_CPP_VECTORMATH_H
 
 #include <vector>
-#include <stdexcept>
 
 template<typename T>
 inline std::vector<T> vectorScalarMultiplication(const std::vector<T> &vector, T scalar) {

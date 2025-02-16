@@ -13,7 +13,6 @@
 #include <list>
 #include <algorithm>
 #include <sstream>
-#include <stdexcept>
 #include <map>
 
 #include "SpicenetSomBase.h"
@@ -158,9 +157,9 @@ bool Spicenet<T, D>::tryDecode(uint8_t targetSom, const std::map<uint8_t, std::v
             continue;
         }
         if (inputValues.find(i) == inputValues.end()) {
+#ifdef SPICENET_LOGGING
             std::stringstream ss;
             ss << "Spicenet tryDecode: for som " << std::to_string(i) << " is no activation given";
-#ifdef SPICENET_LOGGING
             LOG_LN(ss.str().c_str());
 #endif
             return false;

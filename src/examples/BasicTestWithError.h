@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 #include "spicenet_lib/Spicenet.h"
-#include "BasicExampleData.h"
+#include "BasicTestWithErrorData.h"
 #include "spicenet_lib/RegressionMetrics.h"
 
 #define SOM_SIZE 100
