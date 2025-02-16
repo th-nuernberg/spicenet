@@ -85,7 +85,7 @@ class SpiceNet:
                     normed_should_activations - _norm(som.get_activation_vector(x))) ** 2  # TODO: Doc quadratic
 
                 start_index = winning_index - 1 if winning_index > 0 else winning_index
-                end_index = winning_index + 1 if winning_index < len(normed_should_activations) - 2 else winning_index
+                end_index = winning_index + 1 if winning_index < len(normed_should_activations) - 1 else winning_index
                 start: float = som.get_as_matrix()[start_index][0]
                 end: float = som.get_as_matrix()[end_index][0]
                 #print(f'start_index: {start_index}, end_index: {end_index}, winning_index: {winning_index}, start: {start}, end: {end}')

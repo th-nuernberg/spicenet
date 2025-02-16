@@ -20,6 +20,9 @@ def plot_som(som: SpiceNetSom, select_all_button: bool = False):
     activation_values = som.calculate_activation_values(x_plt_vals.tolist())
     df = pd.DataFrame(activation_values[:, 2:].transpose(), index=x_plt_vals)
     fig = px.line(df)
+    fig.update_layout(
+        xaxis_title="input", yaxis_title="activation"
+    )
     if select_all_button:
         fig.update_layout(dict(updatemenus=[
             dict(
