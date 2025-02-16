@@ -21,8 +21,8 @@ class SpiceNetHcm:
         self.__lrf_trust_of_new = lrf_trust_of_new
         self.__lrf_weights = lrf_weights
         self.weights = np.ones((len(som_1), len(som_2)))
-        self.__activation_bar_vector_1: np.array = np.zeros(len(som_1))
-        self.__activation_bar_vector_2: np.array = np.zeros(len(som_2))
+        self.activation_bar_vector_1: np.array = np.zeros(len(som_1))
+        self.activation_bar_vector_2: np.array = np.zeros(len(som_2))
         self.__som_1 = som_1
         self.__som_2 = som_2
         self.__iteration = 0
@@ -67,21 +67,21 @@ class SpiceNetHcm:
             for i in range(len(values_som_1)):
                 activation_vector_som_1 = self.__som_1.get_activation_vector(values_som_1[i])
                 activation_vector_som_2 = self.__som_2.get_activation_vector(values_som_2[i])
-                self.__activation_bar_vector_1 = ((1.0 - self.__lrf_trust_of_new.call(self.__iteration))
-                                                  * self.__activation_bar_vector_1
+                self.activation_bar_vector_1 = ((1.0 - self.__lrf_trust_of_new.call(self.__iteration))
+                                                  * self.activation_bar_vector_1
                                                   + self.__lrf_trust_of_new.call(self.__iteration)
                                                   * activation_vector_som_1)
-                self.__activation_bar_vector_2 = ((1.0 - self.__lrf_trust_of_new.call(self.__iteration))
-                                                  * self.__activation_bar_vector_2
+                self.activation_bar_vector_2 = ((1.0 - self.__lrf_trust_of_new.call(self.__iteration))
+                                                  * self.activation_bar_vector_2
                                                   + self.__lrf_trust_of_new.call(self.__iteration)
                                                   * activation_vector_som_2)
 
                 # Som 1 represents the y-axis and Som 2 the x-axis
                 weights_delta_matrix = (
                         self.__lrf_weights.call(self.__iteration)
-                        * np.matrix(activation_vector_som_1 - self.__activation_bar_vector_1)
+                        * np.matrix(activation_vector_som_1 - self.activation_bar_vector_1)
                         .transpose()
-                        .dot(np.matrix(activation_vector_som_2 - self.__activation_bar_vector_2))
+                        .dot(np.matrix(activation_vector_som_2 - self.activation_bar_vector_2))
                 )
                 self.weights += weights_delta_matrix
                 self.__iteration += 1

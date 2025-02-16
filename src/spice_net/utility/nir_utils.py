@@ -117,10 +117,12 @@ def nir_to_hcm(nir_spicenet_hcm: nir.SPICEnetHCM, som_1: SpiceNetSom, som_2: Spi
     
     # Override weights with the ones from the NIR SPICEnetHCM
     hcm.weights = nir_spicenet_hcm.weights
+    hcm.activation_bar_vector_1 = nir_spicenet_hcm.activation_bar_vector_1
+    hcm.activation_bar_vector_2 = nir_spicenet_hcm.activation_bar_vector_2
     return hcm
 
 def hcm_to_nir(spicenet_hcm: SpiceNetHcm) -> nir.SPICEnetHCM:
-    nir_hcm = nir.SPICEnetHCM(weights=spicenet_hcm.weights) # Weights are already numpy array
+    nir_hcm = nir.SPICEnetHCM(weights=spicenet_hcm.weights, activation_bar_vector_1=spicenet_hcm.activation_bar_vector_1, activation_bar_vector_2=spicenet_hcm.activation_bar_vector_2) # Weights are already numpy array
     return nir_hcm
 
 def som_to_nir(SpiceNetSom: SpiceNetSom) -> nir.SPICEnetSOM:
