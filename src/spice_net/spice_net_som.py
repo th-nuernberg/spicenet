@@ -7,7 +7,7 @@ from .learning_rate_functions import LearningRateFunction
 
 class SpiceNetSom:
     """
-    This self organizing map implementation is specifically for SpiceNet. It creates a 1D som.
+    This self organizing map implementation is specifically for SpiceNet.
     For more information read the theory papers included.
     """
 
@@ -16,9 +16,12 @@ class SpiceNetSom:
                  value_range_start: float,
                  value_range_end: float,
                  lrf_tuning_curve: LearningRateFunction,
-                 lrf_interaction_kernel: LearningRateFunction):
+                 lrf_interaction_kernel: LearningRateFunction,
+                 key: str,
+                 dimensions: int = 1, ):
         """
         Creates a SpiceNetSom with neurons equally distributed across the specified value range.
+
         :param n_neurons: The number of neurons that should be created.
         :param value_range_start: Start of the believed value range. (This is only relevant for the initialisation.
         It is possible to fit values outside of this range!)
@@ -26,7 +29,12 @@ class SpiceNetSom:
         It is possible to fit values outside of this range!)
         :param lrf_tuning_curve: Use this parameter to define how fast the tuning curve is changed.
         :param lrf_interaction_kernel: Use this parameter to define how strong the interaction kernel affects the preferred value of a node.
+        :param key: The key to identify the som.
+        :param dimensions: The dimensions of the som nodes (the data represented).
         """
+        assert dimensions >= 1
+
+        self.__key = key
         self.__lrf_interaction_kernel = lrf_interaction_kernel
         self.__lrf_tuning_curve = lrf_tuning_curve
         self.__iteration = 0
@@ -38,7 +46,10 @@ class SpiceNetSom:
         pos = value_range_start + step_size / 2.0
 
         for i in range(n_neurons):
-            new_neuron = SpiceNetSom.__SomNeuron(pos)
+            if dimensions == 1:
+                new_neuron = SpiceNetSom.__SomNeuron(pos)
+            else:
+                new_neuron = SpiceNetSom.__SomNeuron(np.array([pos for i in range(dimensions)]))
             self.__neurons.append(new_neuron)
             pos += step_size
 
@@ -49,17 +60,21 @@ class SpiceNetSom:
         for neuron in self.__neurons:
             print(neuron)
 
-    def fit(self, values: list[float], epochs: int):
+    def fit(self, values: list[float | np.ndarray[any, np.dtype[np.float64]]], epochs: int):
         for epoch in range(epochs):
             for i in range(len(values)):
                 winning_neuron_index, _ = self.__argmax_neuron_activation(values[i])
 
                 for j in range(len(self.__neurons)):
+                    # TODO: Fix passed iterations
                     self.__neurons[j].update(values[i],
                                              self.__lrf_tuning_curve.call(self.__iteration),
                                              self.__lrf_interaction_kernel.call(self.__iteration),
                                              j - winning_neuron_index)
                 self.__iteration += 1
+
+    def get_key(self):
+        return self.__key
 
     def get_as_matrix(self) -> np.ndarray:
         """
@@ -70,10 +85,10 @@ class SpiceNetSom:
         return np.array([[neuron.preferred_value for neuron in self.__neurons],
                          [neuron.tuning_curve_width for neuron in self.__neurons]]).transpose()
 
-    def get_activation_vector(self, value: float) -> np.array:
+    def get_activation_vector(self, value: float | np.ndarray[any, np.dtype[np.float64]]) -> np.array:
         return np.array([neuron.activation_for_value(value) for neuron in self.__neurons])
 
-    def calculate_activation_values(self, values: list[float]):
+    def calculate_activation_values(self, values: list[float | np.ndarray[any, np.dtype[np.float64]]]):
         """
         Calculates activation values for all neurons in the som.
         :param values:
@@ -88,7 +103,7 @@ class SpiceNetSom:
             activation_values),
             axis=1)
 
-    def get_winning_neuron_index(self, value: float) -> (int, float):
+    def get_winning_neuron_index(self, value: float | np.ndarray[any, np.dtype[np.float64]]) -> (int, float):
         winning_neuron_index, activation_values = self.__argmax_neuron_activation(value)
         return winning_neuron_index, activation_values[winning_neuron_index]
 
@@ -111,7 +126,7 @@ class SpiceNetSom:
         else:
             return self.__neurons[neuron_index].preferred_value + r
 
-    def __argmax_neuron_activation(self, value: float):
+    def __argmax_neuron_activation(self, value: float | np.ndarray[any, np.dtype[np.float64]]):
         """
         Calculates the neuron with the highest activation value.
         :param value: The value for wich the activation values should be calculated.
@@ -138,7 +153,7 @@ class SpiceNetSom:
         """
 
         def __init__(self,
-                     preferred_value: float,
+                     preferred_value: float | np.ndarray[any, np.dtype[np.float64]],
                      tuning_curve_width: float = 0.001):
             """
             Creates a som neuron.
@@ -154,21 +169,30 @@ class SpiceNetSom:
         def __str__(self):
             return f'SomeNeuron: preferred_value={self.preferred_value}, tuning_curve_width={self.tuning_curve_width}'
 
-        def activation_for_value(self, value: float):
+        def activation_for_value(self, value: float | np.ndarray[any, np.dtype[np.float64]]):
             """
             Returns the activation value of the neuron.
             :param value: The value for wich the activation has to be calculated.
             :return: The "height" of the tuning curve at the position of the value.
             """
-            return (
-                    (1.0 / (math.sqrt(2.0 * math.pi) * self.tuning_curve_width))
-                    *
-                    math.exp(
-                        (-(value - self.preferred_value) ** 2) /
-                        (2.0 * self.tuning_curve_width ** 2))
-            )
+            if isinstance(value, float):
+                return (
+                        (1.0 / (math.sqrt(2.0 * math.pi) * self.tuning_curve_width))
+                        *
+                        math.exp(
+                            (-((value - self.preferred_value) ** 2)) / #FIXME: Wo muss das - hin vor dem exponent oder nach
+                            (2.0 * self.tuning_curve_width ** 2))
+                )
+            else:
+                return (
+                        (1.0 / (math.sqrt(2.0 * math.pi) * self.tuning_curve_width))
+                        *
+                        math.exp(
+                            (-((np.linalg.vector_norm(value - self.preferred_value)) ** 2)) /
+                            (2.0 * self.tuning_curve_width ** 2))
+                )
 
-        def activation_for_values(self, values: list[float]):
+        def activation_for_values(self, values: list[float | np.ndarray[any, np.dtype[np.float64]]]):
             """
             Returns the activation values for a list of values.
             :param values: The values for wich the activation has to be calculated.
@@ -176,7 +200,8 @@ class SpiceNetSom:
             """
             return np.array([self.activation_for_value(value) for value in values])
 
-        def update(self, value: float, learn_rate: float, interaction_kernel_learning_rate: float,
+        def update(self, value: float | np.ndarray[any, np.dtype[np.float64]], learn_rate: float,
+                   interaction_kernel_learning_rate: float,
                    distance_to_winner: int):
             """
             Updates the weights of the neurons.
@@ -192,7 +217,14 @@ class SpiceNetSom:
             """
             interaction_kernel_value = math.exp(
                 (-abs(distance_to_winner) ** 2) / (2 * interaction_kernel_learning_rate ** 2))
+            #old_preferred_value = np.array(self.preferred_value) #FIXME: Wirklich mit old arbeiten?
+            old_preferred_value = self.preferred_value #FIXME: Wirklich mit old arbeiten?
             self.preferred_value += learn_rate * interaction_kernel_value * (value - self.preferred_value)
-            self.tuning_curve_width += learn_rate * interaction_kernel_value * (
-                    (value - self.preferred_value) ** 2 - self.tuning_curve_width ** 2
-            )
+            if isinstance(value, float):
+                self.tuning_curve_width += learn_rate * interaction_kernel_value * (
+                        (value - old_preferred_value) ** 2 - self.tuning_curve_width ** 2
+                )
+            else:
+                self.tuning_curve_width += learn_rate * interaction_kernel_value * (
+                        np.linalg.vector_norm(value - old_preferred_value) ** 2 - self.tuning_curve_width ** 2
+                )

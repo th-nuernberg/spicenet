@@ -21,3 +21,5 @@ The Notebooks you will find in this repository, are examples on how to use this 
 - [solar panels](/notebooks/solar_panel_example.ipynb): This notebook shows you how to calculate the voltage of a solar panel by the lux level of the environment.
 - [tutorial](/notebooks/spice_net_tutorial.ipynb): Follow this guid on how to use this library
 
+## Dev notes
+```poetry install --all-extras```
