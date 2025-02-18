@@ -7,12 +7,12 @@
 
 #include <Arduino.h>
 #include "spicenet_lib/Spicenet.h"
-#include "2dSomTestData.h"
+#include "3DTestData.h"
 #include "spicenet_lib/RegressionMetrics.h"
 
-#define SOM_SIZE 100
+#define SOM_SIZE 25
 
-auto *spicenetSom1 = new SpicenetSom<float, 2>(-1,
+auto *spicenetSom1 = new SpicenetSom<float, 1>(-1,
                                                1,
                                                SOM_SIZE,
                                                [](auto x) -> float { return 0.8; },
@@ -24,19 +24,26 @@ auto *spicenetSom2 = new SpicenetSom<float, 1>(-1,
                                                [](auto x) -> float { return 0.8; },
                                                [](auto x) -> float { return 0.8; });
 
-auto *hcm = new SpicenetHcm<float>({SOM_SIZE, SOM_SIZE},
+auto *spicenetSom3 = new SpicenetSom<float, 1>(-1,
+                                               1,
+                                               SOM_SIZE,
+                                               [](auto x) -> float { return 0.8; },
+                                               [](auto x) -> float { return 0.8; });
+
+auto *hcm = new SpicenetHcm<float>({SOM_SIZE, SOM_SIZE, SOM_SIZE},
                                    [](auto x) -> float { return 0.8; },
                                    [](auto x) -> float { return 0.8; });
 
 
-std::array<SpicenetSomBase<float> *, 2> somArr = {
+std::array<SpicenetSomBase<float> *, 3> somArr = {
         spicenetSom1,
-        spicenetSom2
+        spicenetSom2,
+        spicenetSom3
 };
-Spicenet<float, 2> spicenet(hcm, somArr);
+Spicenet<float, 3> spicenet(hcm, somArr);
 
 
-void trainModel2dSom() {
+void trainModel() {
     Serial.println("[Training]: Start loading test dataset");
     const auto startLoadData = millis();
     auto trainingsData = getTrainingsData3D();
@@ -52,34 +59,43 @@ void trainModel2dSom() {
     Serial.print("[Training]: Trainset size ");
     Serial.println(trainingsData.begin()->size());
     const auto startTraining = millis();
-    spicenet.fit(trainingsData, 100);
+    spicenet.fit(trainingsData, 1);
     auto endTraining = millis();
     Serial.print("[Training]: Training finished ");
     Serial.print(endTraining - startTraining);
     Serial.println(" millis");
 }
 
-void evaluateModel2dSom() {
+void evaluateModel() {
     Serial.println("[Evaluation]: Metrics");
     auto trainingsData = getTestData3D();
-    auto initData = *trainingsData.begin();
-    auto resultDataGeneric = *(++trainingsData.begin());
+
+    auto it = trainingsData.begin();
+    unsigned int size = it->size();
+    auto xIter = it->begin();
+    ++it;
+    auto zIter = it->begin();
+    Serial.println("[Evaluation]: Metrics");
+    ++it;
+    auto yData = *it;
+
     std::list<float> resultData;
-    for (auto &dataVec: resultDataGeneric) {
+    for (auto &dataVec: yData) {
         resultData.push_back(dataVec.at(0));
     }
 
     Serial.println("[Evaluation] Predicted values: ");
     unsigned int ind = 0;
     std::list<float> predictedData;
-    for (auto &init: initData) {
+
+    for (unsigned int i = 0; i < size; ++i) {
         Serial.print("Calculated data: ");
         Serial.print(ind);
         Serial.print(" / ");
         Serial.print(resultData.size());
         float prediction;
         const auto start = millis();
-        auto successful = spicenet.tryDecode(1, {{0, init}}, prediction);
+        auto successful = spicenet.tryDecode(2, {{0, *xIter}, {1, *zIter}}, prediction);
         const auto end = millis();
         if (successful) {
             predictedData.push_back(prediction);
@@ -96,6 +112,9 @@ void evaluateModel2dSom() {
         Serial.print(end - start);
         Serial.println();
         ++ind;
+
+        ++xIter;
+        ++zIter;
     }
     Serial.print("\r");
     Serial.println("[Evaluation] Stats: ");
@@ -112,8 +131,8 @@ void evaluateModel2dSom() {
 }
 
 void runTest() {
-    trainModel2dSom();
-    evaluateModel2dSom();
+    trainModel();
+    evaluateModel();
 }
 
 

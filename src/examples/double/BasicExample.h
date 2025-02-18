@@ -7,46 +7,39 @@
 
 #include <Arduino.h>
 #include "spicenet_lib/Spicenet.h"
-#include "3DTestData.h"
+#include "BasicExampleData.h"
 #include "spicenet_lib/RegressionMetrics.h"
 
-#define SOM_SIZE 30
+#define SOM_SIZE 100
 
-auto *spicenetSom1 = new SpicenetSom<float, 1>(-1,
+auto *spicenetSom1 = new SpicenetSom<double, 1>(-1,
                                                1,
                                                SOM_SIZE,
                                                [](auto x) -> float { return 0.8; },
                                                [](auto x) -> float { return 0.8; });
 
-auto *spicenetSom2 = new SpicenetSom<float, 1>(-1,
+auto *spicenetSom2 = new SpicenetSom<double, 1>(-1,
                                                1,
                                                SOM_SIZE,
                                                [](auto x) -> float { return 0.8; },
                                                [](auto x) -> float { return 0.8; });
 
-auto *spicenetSom3 = new SpicenetSom<float, 1>(-1,
-                                               1,
-                                               SOM_SIZE,
-                                               [](auto x) -> float { return 0.8; },
-                                               [](auto x) -> float { return 0.8; });
-
-auto *hcm = new SpicenetHcm<float>({SOM_SIZE, SOM_SIZE, SOM_SIZE},
+auto *hcm = new SpicenetHcm<double>({SOM_SIZE, SOM_SIZE},
                                    [](auto x) -> float { return 0.8; },
                                    [](auto x) -> float { return 0.8; });
 
 
-std::array<SpicenetSomBase<float> *, 3> somArr = {
+std::array<SpicenetSomBase<double> *, 2> somArr = {
         spicenetSom1,
-        spicenetSom2,
-        spicenetSom3
+        spicenetSom2
 };
-Spicenet<float, 3> spicenet(hcm, somArr);
+Spicenet<double, 2> spicenet(hcm, somArr);
 
 
 void trainModel() {
     Serial.println("[Training]: Start loading test dataset");
     const auto startLoadData = millis();
-    auto trainingsData = getTrainingsData3D();
+    auto trainingsData = getTrainingsData();
     Serial.print("[Training]: finished loading test dataset in ");
     Serial.print(millis() - startLoadData);
     Serial.println(" millis");
@@ -59,7 +52,7 @@ void trainModel() {
     Serial.print("[Training]: Trainset size ");
     Serial.println(trainingsData.begin()->size());
     const auto startTraining = millis();
-    spicenet.fit(trainingsData, 1);
+    spicenet.fit(trainingsData, 10);
     auto endTraining = millis();
     Serial.print("[Training]: Training finished ");
     Serial.print(endTraining - startTraining);
@@ -68,35 +61,25 @@ void trainModel() {
 
 void evaluateModel() {
     Serial.println("[Evaluation]: Metrics");
-    auto trainingsData = getTestData3D();
-
-    auto it = trainingsData.begin();
-    auto xData = *it;
-    ++it;
-    auto zData = *it;
-    ++it;
-    auto yData = *it;
-
-
-    std::list<float> resultData;
-    for (auto &dataVec: yData) {
+    auto trainingsData = getTestData();
+    auto initData = *trainingsData.begin();
+    auto resultDataGeneric = *(++trainingsData.begin());
+    std::list<double> resultData;
+    for (auto &dataVec: resultDataGeneric) {
         resultData.push_back(dataVec.at(0));
     }
 
     Serial.println("[Evaluation] Predicted values: ");
     unsigned int ind = 0;
-    std::list<float> predictedData;
-    auto xIter = xData.begin();
-    auto zIter = zData.begin();
-
-    for (unsigned int i = 0; i < xData.size(); ++i) {
+    std::list<double> predictedData;
+    for (auto &init: initData) {
         Serial.print("Calculated data: ");
         Serial.print(ind);
         Serial.print(" / ");
         Serial.print(resultData.size());
-        float prediction;
+        double prediction;
         const auto start = millis();
-        auto successful = spicenet.tryDecode(2, {{0, *xIter}, {1, *zIter}}, prediction);
+        auto successful = spicenet.tryDecode(1, {{0, init}}, prediction);
         const auto end = millis();
         if (successful) {
             predictedData.push_back(prediction);
@@ -113,9 +96,6 @@ void evaluateModel() {
         Serial.print(end - start);
         Serial.println();
         ++ind;
-
-        ++xIter;
-        ++zIter;
     }
     Serial.print("\r");
     Serial.println("[Evaluation] Stats: ");

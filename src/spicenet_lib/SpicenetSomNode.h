@@ -47,15 +47,15 @@ void SpicenetSomNode<T, D>::updateNode(
         const T interactionKernelLearningRate,
         const uint16_t distanceToWinner) {
     T interactionKernelValue = exp((-pow(distanceToWinner, 2)) / (2 * pow(interactionKernelLearningRate, 2)));
-    T oldPreferredValue[D];
-    memcpy(oldPreferredValue, this->preferredValue, sizeof(T[D]));
+    // T oldPreferredValue[D];
+    // memcpy(oldPreferredValue, this->preferredValue, sizeof(T[D]));
     for (unsigned int i = 0; i < D; i++) {
         this->preferredValue[i] +=
                 learnRate * interactionKernelValue * (inputValue[i] - this->preferredValue[i]);
     }
 
     this->tuningCurveWidth += learnRate * interactionKernelValue * (
-            pow(distanceBetweenPoints<T, D>(inputValue, oldPreferredValue), 2)
+            pow(distanceBetweenPoints<T, D>(inputValue, this->preferredValue), 2)
             - pow(this->tuningCurveWidth, 2)
     );
 }
