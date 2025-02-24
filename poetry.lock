@@ -2787,7 +2787,7 @@ type = ["importlib_metadata (>=7.0.2)", "jaraco.develop (>=7.21)", "mypy (==1.14
 
 [[package]]
 name = "sinabs"
-version = "0.0.1.dev1759"
+version = "0.0.1.dev1760"
 description = "SynSense Spiking Neural Network simulator for deep neural networks (DNNs)."
 optional = false
 python-versions = "*"
