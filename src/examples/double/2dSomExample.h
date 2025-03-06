@@ -61,9 +61,10 @@ void trainModel2dSom() {
 
 void evaluateModel2dSom() {
     Serial.println("[Evaluation]: Metrics");
-    auto trainingsData = getTestData3D();
-    auto initData = *trainingsData.begin();
-    auto resultDataGeneric = *(++trainingsData.begin());
+    auto testData = getTestData3D();
+    auto initData = *testData.begin();
+    auto resultDataGeneric = *(++testData.begin());
+
     std::list<double> resultData;
     for (auto &dataVec: resultDataGeneric) {
         resultData.push_back(dataVec.at(0));

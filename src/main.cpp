@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <mbed_stats.h>
 
-#define BASIC_WITH_ERROR_TEST_FLOAT
+#define T2D_SOM_TEST_DOUBLE
 
 #ifdef BASIC_TEST_FLOAT
 #include "examples/float/BasicExample.h"
@@ -16,19 +16,10 @@
 #include "examples/float/3DTest.h"
 #endif
 
-
-#ifdef BASIC_TEST_DOUBLE
-#include "examples/double/BasicExample.h"
-#endif
-#ifdef BASIC_WITH_ERROR_TEST_DOUBLE
-#include "examples/double/BasicTestWithError.h"
-#endif
 #ifdef T2D_SOM_TEST_DOUBLE
 #include "examples/double/2dSomExample.h"
 #endif
-#ifdef T3D_HCM_TEST_DOUBLE
-#include "examples/double/3DTest.h"
-#endif
+
 
 const String title = "   _____ _____ _____ _____ ______            _   \n"
                      "  / ____|  __ \\_   _/ ____|  ____|          | |  \n"
@@ -75,18 +66,10 @@ void setup() {
     runTest();
 #endif
 
-#ifdef BASIC_TEST_DOUBLE
-    runTest();
-#endif
 #ifdef T2D_SOM_TEST_DOUBLE
     runTest();
 #endif
-#ifdef BASIC_WITH_ERROR_TEST_DOUBLE
-    runTest();
-#endif
-#ifdef T3D_HCM_TEST_DOUBLE
-    runTest();
-#endif
+
 
     randomSeed(42);
     pinMode(LED_BUILTIN, OUTPUT);

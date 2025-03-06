@@ -6,7 +6,7 @@
 #define SPICENET_SPICENETLOGGING_H
 
 #if defined(ARDUINO)
-//#define SPICENET_LOGGING
+#define SPICENET_LOGGING
 #endif
 
 #ifdef SPICENET_LOGGING
