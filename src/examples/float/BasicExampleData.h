@@ -5,7 +5,7 @@
 #ifndef SPICENET_TRAININGS_DATA_H
 #define SPICENET_TRAININGS_DATA_H
 
-#include <math.h>
+#include <cmath>
 #include <list>
 #include <vector>
 

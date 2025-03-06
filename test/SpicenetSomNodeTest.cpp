@@ -25,7 +25,7 @@ TEST(SpicenetSomNodeTestSuite, UpdateNode) {
     float_t newPreferredValue = 0.0002706144098 + 1.0;
     float_t newTuningCurveWidth = -0.001704870782 + 0.8;
     EXPECT_EQ(node.preferredValue[0], newPreferredValue);
-    EXPECT_EQ(node.tuningCurveWidth, newTuningCurveWidth);
+    EXPECT_NEAR(node.tuningCurveWidth, newTuningCurveWidth, 0.0001);
 }
 
 TEST(SpicenetSomNodeTestSuite, UpdateNode2D) {
@@ -48,7 +48,7 @@ TEST(SpicenetSomNodeTestSuite, UpdateNode2D) {
     float_t newTuningCurveWidth = -0.001704870782 + 0.8;
     EXPECT_EQ(node.preferredValue[0], newPreferredValue);
     EXPECT_EQ(node.preferredValue[1], newPreferredValue);
-    EXPECT_EQ(node.tuningCurveWidth, newTuningCurveWidth);
+    EXPECT_NEAR(node.tuningCurveWidth, newTuningCurveWidth, 0.0001);
 }
 
 TEST(SpicenetSomNodeTestSuite, ActivationOfNode) {

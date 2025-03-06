@@ -134,7 +134,6 @@ bool Spicenet<T, D>::fit(const std::list<std::list<std::vector<T>>> &inputData,
 
             this->hcm->fit(activations, 1);
 #ifdef SPICENET_LOGGING
-            LOG("SOM trainings iterations");
             LOG("HCM fit data: ");
             LOG(iteration);
             LOG('\r');

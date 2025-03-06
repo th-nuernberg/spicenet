@@ -12,7 +12,7 @@ inline double bias(double predicted, double actual) {
     return predicted - actual;
 }
 
-inline double mean(const std::vector<double>& vector) {
+inline double mean(const std::vector<double> &vector) {
     double sum = 0;
     for (auto test: vector) {
         sum += test;
@@ -324,35 +324,35 @@ inline std::map<std::string, double> metricsMap(Iterator beginPredicted,
                   "Iterator must point to a numeric type!");
 
     return {
-            {"Mean Bias",                            meanBias(beginPredicted, endPredicted, beginActual, endActual)},
-            {"Median Bias",                          medianBias(beginPredicted, endPredicted, beginActual, endActual)},
-            {"Standard Deviation of Bias",           standardDeviationBias(beginPredicted, endPredicted, beginActual,
-                                                                           endActual)},
-            {"Mean Absolute Gross Error",            meanAbsoluteGrossError(beginPredicted, endPredicted, beginActual,
-                                                                            endActual)},
-            {"Mean Squared Error",                   meanSquaredError(beginPredicted, endPredicted, beginActual,
+            {"Mean Bias",                       meanBias(beginPredicted, endPredicted, beginActual, endActual)},
+            {"Median Bias",                     medianBias(beginPredicted, endPredicted, beginActual, endActual)},
+            {"Standard Deviation of Bias",      standardDeviationBias(beginPredicted, endPredicted, beginActual,
                                                                       endActual)},
-            {"Root Mean Squared Error",              rootMeanSquaredError(beginPredicted, endPredicted, beginActual,
-                                                                          endActual)},
-            {"Centered Mean Square Difference",      centeredMeanSquareDifference(beginPredicted, endPredicted,
-                                                                                  beginActual, endActual)},
-            {"Centered Root Mean Square Difference", centeredRootMeanSquaredError(beginPredicted, endPredicted,
-                                                                                  beginActual, endActual)},
-            {"Mean Normalized Bias",                 meanNormalizedBias(beginPredicted, endPredicted, beginActual,
-                                                                        endActual)},
-            {"Mean Normalized Gross Error",          meanNormalizedGrossError(beginPredicted, endPredicted, beginActual,
-                                                                              endActual)},
-            {"Normalized Mean Bias",                 normalizedMeanBias(beginPredicted, endPredicted, beginActual,
-                                                                        endActual)},
-            {"Normalized Mean Error",                normalizedMeanError(beginPredicted, endPredicted, beginActual,
+            {"Mean Absolute Gross Error",       meanAbsoluteGrossError(beginPredicted, endPredicted, beginActual,
+                                                                       endActual)},
+            {"Mean Squared Error",              meanSquaredError(beginPredicted, endPredicted, beginActual,
+                                                                 endActual)},
+            {"Root Mean Squared Error",         rootMeanSquaredError(beginPredicted, endPredicted, beginActual,
+                                                                     endActual)},
+            {"Centered Mean Square Difference", centeredMeanSquareDifference(beginPredicted, endPredicted,
+                                                                             beginActual, endActual)},
+            {"Centered Root Mean Square Error", centeredRootMeanSquaredError(beginPredicted, endPredicted,
+                                                                             beginActual, endActual)},
+            {"Mean Normalized Bias",            meanNormalizedBias(beginPredicted, endPredicted, beginActual,
+                                                                   endActual)},
+            {"Mean Normalized Gross Error",     meanNormalizedGrossError(beginPredicted, endPredicted, beginActual,
                                                                          endActual)},
-            {"Fractional Bias",                      fractionalBias(beginPredicted, endPredicted, beginActual,
+            {"Normalized Mean Bias",            normalizedMeanBias(beginPredicted, endPredicted, beginActual,
+                                                                   endActual)},
+            {"Normalized Mean Error",           normalizedMeanError(beginPredicted, endPredicted, beginActual,
                                                                     endActual)},
-            {"Fractional Gross Error",               fractionalGrossError(beginPredicted, endPredicted, beginActual,
-                                                                          endActual)},
-            {"Theil’s UI",                           theilsUi(beginPredicted, endPredicted, beginActual, endActual)},
-            {"Index of agreement",                   indexOfAgreement(beginPredicted, endPredicted, beginActual,
-                                                                      endActual)},
+            {"Fractional Bias",                 fractionalBias(beginPredicted, endPredicted, beginActual,
+                                                               endActual)},
+            {"Fractional Gross Error",          fractionalGrossError(beginPredicted, endPredicted, beginActual,
+                                                                     endActual)},
+            {"Theil’s UI",                      theilsUi(beginPredicted, endPredicted, beginActual, endActual)},
+            {"Index of agreement",              indexOfAgreement(beginPredicted, endPredicted, beginActual,
+                                                                 endActual)},
     };
 }
 

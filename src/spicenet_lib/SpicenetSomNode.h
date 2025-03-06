@@ -69,7 +69,7 @@ T SpicenetSomNode<T, D>::nodeActivation(const T (&data)[D]) const {
 }
 
 template<typename T, size_t D>
-T distanceBetweenPoints(const T (&tip)[D], const T (&tail)[D]) {
+inline T distanceBetweenPoints(const T (&tip)[D], const T (&tail)[D]) {
     T sum = 0;
     for (unsigned int i = 0; i < D; ++i) {
         sum += pow(tip[i] - tail[i], 2);
