@@ -7,3 +7,6 @@ class ConstLRF(LearningRateFunction):
 
     def call(self, iteration: int) -> float:
         return self.__value
+    
+    def get_parameters(self) -> dict:
+        return {"value": self.__value}

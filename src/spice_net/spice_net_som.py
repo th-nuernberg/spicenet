@@ -131,6 +131,18 @@ class SpiceNetSom:
                 max_activation = new_activation
                 winning_neuron_index = i
         return winning_neuron_index, activation_dict
+    
+    def get_lrf_tuning_curve(self) -> LearningRateFunction:
+        return self.__lrf_tuning_curve
+    
+    def get_lrf_interaction_kernel(self) -> LearningRateFunction:
+        return self.__lrf_interaction_kernel
+    
+    def get_iteration(self) -> int:
+        return self.__iteration
+    
+    def set_iteration(self, iteration: int):
+        self.__iteration = iteration
 
     class SomNeuron:
         """

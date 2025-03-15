@@ -16,3 +16,6 @@ class ExpEDecayLRF(LearningRateFunction):
 
     def call(self, iteration: int) -> float:
         return math.exp(-iteration * self.__speed + self.__x_shift) + self.__bias
+    
+    def get_parameters(self) -> dict:
+        return {"speed": self.__speed, "approached_value": self.__bias, "x_shift": self.__x_shift}

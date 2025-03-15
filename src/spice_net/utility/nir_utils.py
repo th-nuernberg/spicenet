@@ -1,5 +1,5 @@
 
-from spice_net.learning_rate_functions.learning_rate_function import LearningRateFunction
+from spice_net.learning_rate_functions import *
 from ..spice_net_som import SpiceNetSom
 from ..spice_net_hcm import SpiceNetHcm
 from ..spice_net import SpiceNet
@@ -12,10 +12,10 @@ SpiceTypes = Union[SpiceNet, SpiceNetHcm, SpiceNetSom, SpiceNetSom.SomNeuron]
 def from_nir(node: nir.NIRNode,
             som_1: SpiceNetSom = None,
             som_2: SpiceNetSom = None,
-            som_lrf_tuning_curve: LearningRateFunction = None,
-            som_lrf_interaction_kernel: LearningRateFunction = None,
-            hcm_lrf_weights: LearningRateFunction = None,
-            hcm_trust_of_new: LearningRateFunction = None) -> SpiceTypes | list[SpiceTypes]:
+            som_lrf_tuning_curve: LearningRateFunction | None = None,
+            som_lrf_interaction_kernel: LearningRateFunction | None = None,
+            hcm_lrf_weights: LearningRateFunction | None = None,
+            hcm_trust_of_new: LearningRateFunction | None = None) -> SpiceTypes | list[SpiceTypes]:
     # If the node is a graph, we need to iterate over all nodes
     return _from_nir(node, False, som_1, som_2, som_lrf_tuning_curve, som_lrf_interaction_kernel, hcm_lrf_weights, hcm_trust_of_new)
         
@@ -23,10 +23,10 @@ def _from_nir(node: nir.NIRNode,
             recurse: bool = False,
             som_1: SpiceNetSom = None,
             som_2: SpiceNetSom = None,
-            som_lrf_tuning_curve: LearningRateFunction = None,
-            som_lrf_interaction_kernel: LearningRateFunction = None,
-            hcm_lrf_weights: LearningRateFunction = None,
-            hcm_trust_of_new: LearningRateFunction = None) -> SpiceTypes | list[SpiceTypes]:
+            som_lrf_tuning_curve: LearningRateFunction | None = None,
+            som_lrf_interaction_kernel: LearningRateFunction | None = None,
+            hcm_lrf_weights: LearningRateFunction | None = None,
+            hcm_trust_of_new: LearningRateFunction | None = None) -> SpiceTypes | list[SpiceTypes]:
     # If the node is a graph, we need to iterate over all nodes
     if isinstance(node, nir.NIRGraph):
         result = []
@@ -43,10 +43,10 @@ def _from_nir(node: nir.NIRNode,
 def _map_from_nir(node: nir.NIRNode,
                 som_1: SpiceNetSom = None,
                 som_2: SpiceNetSom = None,
-                som_lrf_tuning_curve: LearningRateFunction = None,
-                som_lrf_interaction_kernel: LearningRateFunction = None,
-                hcm_lrf_weights: LearningRateFunction = None,
-                hcm_trust_of_new: LearningRateFunction = None) -> Union[SpiceNet, SpiceNetHcm, SpiceNetSom, SpiceNetSom.SomNeuron]:
+                som_lrf_tuning_curve: LearningRateFunction | None = None,
+                som_lrf_interaction_kernel: LearningRateFunction | None = None,
+                hcm_lrf_weights: LearningRateFunction | None = None,
+                hcm_trust_of_new: LearningRateFunction | None = None) -> Union[SpiceNet, SpiceNetHcm, SpiceNetSom, SpiceNetSom.SomNeuron]:
     if isinstance(node, nir.SPICENet):
         return nir_to_spicenet(node, som_lrf_tuning_curve, som_lrf_interaction_kernel, hcm_lrf_weights, hcm_trust_of_new)
     elif isinstance(node, nir.SPICEnetHCM):
@@ -81,10 +81,10 @@ def _map_to_nir(node: SpiceTypes) -> nir.NIRNode:
 
 def nir_to_spicenet(
         nir_spicenet: nir.SPICENet,
-        som_lrf_tuning_curve: LearningRateFunction,
-        som_lrf_interaction_kernel: LearningRateFunction,
-        hcm_lrf_weights: LearningRateFunction,
-        hcm_trust_of_new: LearningRateFunction
+        som_lrf_tuning_curve: LearningRateFunction | None = None,
+        som_lrf_interaction_kernel: LearningRateFunction | None = None,
+        hcm_lrf_weights: LearningRateFunction | None = None,
+        hcm_trust_of_new: LearningRateFunction | None = None
     ) -> SpiceNet | dict[str, SpiceNet]:
     """Converts a nir spicenet to one or multiple spicenets depending on the number of SOMs."""    
     # Transform all soms to spicenet soms
@@ -112,24 +112,48 @@ def spicenet_to_nir(spicenet: SpiceNet) -> nir.SPICENet:
     nir_spicenet = nir.SPICENet.from_lists([som_to_nir(spicenet.som_1), som_to_nir(spicenet.som_2)], [(0, 1, hcm_to_nir(spicenet.get_correlation_matrix()))])
     return nir_spicenet
 
-def nir_to_hcm(nir_spicenet_hcm: nir.SPICEnetHCM, som_1: SpiceNetSom, som_2: SpiceNetSom, hcm_lrf_weights: LearningRateFunction, hcm_trust_of_new: LearningRateFunction) -> SpiceNetHcm:
+def nir_to_hcm(nir_spicenet_hcm: nir.SPICEnetHCM, som_1: SpiceNetSom, som_2: SpiceNetSom, hcm_lrf_weights: LearningRateFunction | None = None, hcm_trust_of_new: LearningRateFunction | None = None) -> SpiceNetHcm:
+    if hcm_lrf_weights is None:
+        if "lrf_weights" in nir_spicenet_hcm.metadata:
+            hcm_lrf_weights = get_lr_function_from_metadata(nir_spicenet_hcm.metadata["lrf_weights"])
+    if hcm_trust_of_new is None:
+        if "lrf_trust_of_new" in nir_spicenet_hcm.metadata:
+            hcm_trust_of_new = get_lr_function_from_metadata(nir_spicenet_hcm.metadata["lrf_trust_of_new"])
+    
     hcm = SpiceNetHcm(som_1=som_1, som_2=som_2, lrf_weights=hcm_lrf_weights, lrf_trust_of_new=hcm_trust_of_new)
+    
+    if "iteration" in nir_spicenet_hcm.metadata:
+        hcm.set_iteration(nir_spicenet_hcm.metadata["iteration"])
     
     # Override weights with the ones from the NIR SPICEnetHCM
     hcm.weights = nir_spicenet_hcm.weights
     hcm.activation_bar_vector_1 = nir_spicenet_hcm.activation_bar_vector_1
     hcm.activation_bar_vector_2 = nir_spicenet_hcm.activation_bar_vector_2
+    
     return hcm
 
 def hcm_to_nir(spicenet_hcm: SpiceNetHcm) -> nir.SPICEnetHCM:
-    nir_hcm = nir.SPICEnetHCM(weights=spicenet_hcm.weights, activation_bar_vector_1=spicenet_hcm.activation_bar_vector_1, activation_bar_vector_2=spicenet_hcm.activation_bar_vector_2) # Weights are already numpy array
+    nir_hcm = nir.SPICEnetHCM(weights=spicenet_hcm.weights,
+                              activation_bar_vector_1=spicenet_hcm.activation_bar_vector_1,
+                              activation_bar_vector_2=spicenet_hcm.activation_bar_vector_2,
+                              metadata={
+                                "lrf_trust_of_new": get_metadata_for_lr_function(spicenet_hcm.get_trust_of_new_lrf()),
+                                "lrf_weights": get_metadata_for_lr_function(spicenet_hcm.get_weights_lrf()),
+                                "iteration": spicenet_hcm.get_iteration()
+                              })
     return nir_hcm
 
-def som_to_nir(SpiceNetSom: SpiceNetSom) -> nir.SPICEnetSOM:
-    nir_som_neurons = [som_neuron_to_nir(neuron) for neuron in SpiceNetSom.neurons]
-    return nir.SPICEnetSOM(nir_som_neurons)
+def som_to_nir(som: SpiceNetSom) -> nir.SPICEnetSOM:
+    nir_som_neurons = [som_neuron_to_nir(neuron) for neuron in som.neurons]
+    return nir.SPICEnetSOM(nir_som_neurons, 
+                           metadata={
+                               "lrf_tuning_curve": get_metadata_for_lr_function(som.get_lrf_tuning_curve()),
+                               "lrf_interaction_kernel": get_metadata_for_lr_function(som.get_lrf_interaction_kernel()),
+                               "iteration": som.get_iteration()
+                              }
+                           )
 
-def nir_to_som(nir_spicenet_som: nir.SPICEnetSOM, lrf_tuning_curve: LearningRateFunction, lrf_interaction_kernel: LearningRateFunction) -> SpiceNetSom:
+def nir_to_som(nir_spicenet_som: nir.SPICEnetSOM, lrf_tuning_curve: LearningRateFunction | None = None, lrf_interaction_kernel: LearningRateFunction | None = None) -> SpiceNetSom:
     """Converts NIR SPICEnetSOM to SpiceNetSom.
     
     Requires the learning rate functions for the tuning curve and interaction kernel as NIR does not transfer this.
@@ -142,6 +166,14 @@ def nir_to_som(nir_spicenet_som: nir.SPICEnetSOM, lrf_tuning_curve: LearningRate
     Returns:
         SpiceNetSom: SPICE Net SOM
     """
+    
+    if lrf_tuning_curve is None:
+        if "lrf_tuning_curve" in nir_spicenet_som.metadata:
+            lrf_tuning_curve = get_lr_function_from_metadata(nir_spicenet_som.metadata["lrf_tuning_curve"])
+    if lrf_interaction_kernel is None:
+        if "lrf_interaction_kernel" in nir_spicenet_som.metadata:
+            lrf_interaction_kernel = get_lr_function_from_metadata(nir_spicenet_som.metadata["lrf_interaction_kernel"])
+    
     # Initialize SpiceNetSom with correct number of SOM neurons
     # min and max value are not important as we will override all neurons shortly
     spicenet_som = SpiceNetSom(len(nir_spicenet_som.neurons), 0, 0, lrf_tuning_curve, lrf_interaction_kernel)
@@ -149,6 +181,9 @@ def nir_to_som(nir_spicenet_som: nir.SPICEnetSOM, lrf_tuning_curve: LearningRate
     # Override all neurons with the ones from the NIR SPICEnetSOM
     for i, nir_neuron in enumerate(nir_spicenet_som.neurons):
         spicenet_som.neurons[i] = nir_to_som_neuron(nir_neuron)
+        
+    if "iteration" in nir_spicenet_som.metadata:
+        spicenet_som.set_iteration(nir_spicenet_som.metadata["iteration"])
         
     return spicenet_som
 
@@ -177,3 +212,34 @@ def read_from_hdf5(
     
     nir_spicenet = nir.read(filepath)
     return from_nir(nir_spicenet, som_1, som_2, som_lrf_tuning_curve, som_lrf_interaction_kernel, hcm_lrf_weights, hcm_trust_of_new)
+
+def map_lr_name_to_type(name: str) -> str:
+    if name == "ConstLRF":
+        return "const"
+    elif name == "ExpEDecayLRF":
+        return "exp"
+    elif name == "InverseTimeAdaptation":
+        return "inv_time"
+    elif name == "LinearLRF":
+        return "linear"
+    else:
+        raise ValueError(f"Unknown learning rate function type {name}")
+    
+
+def get_metadata_for_lr_function(lrf: LearningRateFunction) -> dict:
+    return {
+        "type": map_lr_name_to_type(lrf.__class__.__name__),
+        "parameters": lrf.get_parameters()
+    }
+    
+def get_lr_function_from_metadata(metadata: dict) -> LearningRateFunction | None:
+    if metadata["type"] == "const":
+        return ConstLRF(metadata["parameters"]["value"])
+    elif metadata["type"] == "exp":
+        return ExpEDecayLRF(metadata["parameters"]["speed"], metadata["parameters"]["approached_value"], metadata["parameters"]["x_shift"])
+    elif metadata["type"] == "inv_time":
+        return InverseTimeAdaptation.from_parameters(metadata["parameters"]["A"], metadata["parameters"]["B"], metadata["parameters"]["planned_iterations"])
+    elif metadata["type"] == "linear":
+        return LinearLRF(metadata["parameters"]["slope"], metadata["parameters"]["bias"])
+    else:
+        return None

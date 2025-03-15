@@ -9,6 +9,9 @@ class LinearLRF(LearningRateFunction):
 
     def call(self, iteration: int) -> float:
         return self.__slope * iteration + self.__bias
+    
+    def get_parameters(self) -> dict:
+        return {"slope": self.__slope, "bias": self.__bias}
 
 
 def declining_linear_lrf_from_interval(start: float, stop: float, steps: int) -> LinearLRF:

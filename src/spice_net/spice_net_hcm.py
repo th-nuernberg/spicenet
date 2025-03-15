@@ -85,3 +85,15 @@ class SpiceNetHcm:
                 )
                 self.weights += weights_delta_matrix
                 self.__iteration += 1
+
+    def get_trust_of_new_lrf(self) -> LearningRateFunction:
+        return self.__lrf_trust_of_new
+    
+    def get_weights_lrf(self) -> LearningRateFunction:
+        return self.__lrf_weights
+    
+    def get_iteration(self) -> int:
+        return self.__iteration
+    
+    def set_iteration(self, iteration: int):
+        self.__iteration = iteration

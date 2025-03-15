@@ -6,3 +6,7 @@ class LearningRateFunction:
     @abstractmethod
     def call(self, iteration: int) -> float:
         pass
+    
+    @abstractmethod
+    def get_parameters(self) -> dict:
+        pass
