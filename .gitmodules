@@ -4,3 +4,6 @@
 [submodule "sinabs"]
 	path = sinabs
 	url = https://github.com/lmitlaender/sinabs.git
+[submodule "Bachelor_SPICEnet_SOM_Neuron_SNN"]
+	path = Bachelor_SPICEnet_SOM_Neuron_SNN
+	url = https://github.com/lmitlaender/Bachelor_SPICEnet_SOM_Neuron_SNN
