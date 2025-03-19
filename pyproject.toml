@@ -2,7 +2,7 @@
 name = "spicenet"
 version = "1.0.0"
 description = "SPICEnet is an artificial neural network that is capable of identifying the mathematical relationship between two values. This library provides a single core implementation for quick usage."
-authors = ["Fabian Stiegler <stiegler.fabian.dev@gmail.com>"]
+authors = ["Fabian Stiegler <stiegler.fabian.dev@gmail.com>", "Lutz Mitländer <lutz@mitlaender.dev>"]
 readme = "README.md"
 packages = [
     { include = "spice_net", from = "src" }

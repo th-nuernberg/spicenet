@@ -23,7 +23,7 @@ class InverseTimeAdaptation(LearningRateFunction):
     
     @classmethod
     def from_parameters(cls, A: float, B: float, planned_iterations: int) -> 'InverseTimeAdaptation':
-        instance = cls()
+        instance = cls(0.5, 0.5, planned_iterations)
         instance.__A = A
         instance.__B = B
         instance.__planned_iterations = planned_iterations

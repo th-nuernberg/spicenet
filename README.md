@@ -33,3 +33,6 @@ NIR as well as SINABS have been added as submodules. These submodules point to t
  - [SINABS fork](https://github.com/lmitlaender/sinabs/tree/develop)
 
 Additionally, we add another submodule "Bachelor_SPICEnet_SOM_Neuron_SNN". This submodule points to the repository for the ANN-to-SNN work as well as the further improvements performed at the end of the work. The exploration into direct training is also found here. It has its own requirements and is only linked here to gather all work in this branch. Additionally here the link directly to the repository: [Bachelor_SPICEnet_SOM_Neuron_SNN](https://github.com/lmitlaender/Bachelor_SPICEnet_SOM_Neuron_SNN/tree/main)
+
+## Install Bachelor Version to Test:
+Just use `poetry install` to install all poetry dependencies into a venv. This can then run all notebooks found in the notebook folder.
