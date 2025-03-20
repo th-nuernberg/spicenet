@@ -36,4 +36,5 @@ Additionally, we add another submodule "Bachelor_SPICEnet_SOM_Neuron_SNN". This 
 
 ## Install Bachelor Version to Test:
 First: `git clone -b nir-integration --recurse-submodules https://github.com/th-nuernberg/spicenet.git`
-Just use `poetry install` to install all poetry dependencies into a venv. This can then run all notebooks found in the notebook folder.
+
+Then just use `poetry install` to install all poetry dependencies into a venv. This can then run all notebooks found in the notebook folder.
