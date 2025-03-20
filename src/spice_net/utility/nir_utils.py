@@ -100,7 +100,10 @@ def nir_to_spicenet(
             
     spicenets = {}
     for combo in spicenet_combos:
-        spicenets[f"{combo[0]}_{combo[1]}"] = SpiceNet(correlation_matrix=nir_to_hcm(nir_spicenet.hcms[f"{combo[0]}_{combo[1]}"], spicenet_soms[f"{combo[0]}"], spicenet_soms[f"{combo[1]}"], hcm_lrf_weights, hcm_trust_of_new))
+        if nir_spicenet.hcms.get(f"{combo[0]}_{combo[1]}"):
+            spicenets[f"{combo[0]}_{combo[1]}"] = SpiceNet(correlation_matrix=nir_to_hcm(nir_spicenet.hcms[f"{combo[0]}_{combo[1]}"], spicenet_soms[f"{combo[0]}"], spicenet_soms[f"{combo[1]}"], hcm_lrf_weights, hcm_trust_of_new))
+        else:
+            spicenets[f"{combo[1]}_{combo[0]}"] = SpiceNet(correlation_matrix=nir_to_hcm(nir_spicenet.hcms[f"{combo[1]}_{combo[0]}"], spicenet_soms[f"{combo[1]}"], spicenet_soms[f"{combo[0]}"], hcm_lrf_weights, hcm_trust_of_new))
         
     if len(list(spicenets.keys())) == 1:
         return list(spicenets.values())[0]
@@ -126,16 +129,18 @@ def nir_to_hcm(nir_spicenet_hcm: nir.SPICEnetHCM, som_1: SpiceNetSom, som_2: Spi
         hcm.set_iteration(nir_spicenet_hcm.metadata["iteration"])
     
     # Override weights with the ones from the NIR SPICEnetHCM
-    hcm.weights = nir_spicenet_hcm.weights
-    hcm.activation_bar_vector_1 = nir_spicenet_hcm.activation_bar_vector_1
-    hcm.activation_bar_vector_2 = nir_spicenet_hcm.activation_bar_vector_2
+    # We need to use copy to not pass a reference
+    hcm.weights = nir_spicenet_hcm.weights.copy()
+    hcm.activation_bar_vector_1 = nir_spicenet_hcm.activation_bar_vector_1.copy()
+    hcm.activation_bar_vector_2 = nir_spicenet_hcm.activation_bar_vector_2.copy()
     
     return hcm
 
 def hcm_to_nir(spicenet_hcm: SpiceNetHcm) -> nir.SPICEnetHCM:
-    nir_hcm = nir.SPICEnetHCM(weights=spicenet_hcm.weights,
-                              activation_bar_vector_1=spicenet_hcm.activation_bar_vector_1,
-                              activation_bar_vector_2=spicenet_hcm.activation_bar_vector_2,
+    # We need to use a deep copy here. This is so we avoid passing a reference through NIR and then possibly import a reference in another python object in another framework.
+    nir_hcm = nir.SPICEnetHCM(weights=spicenet_hcm.weights.copy(),
+                              activation_bar_vector_1=spicenet_hcm.activation_bar_vector_1.copy(),
+                              activation_bar_vector_2=spicenet_hcm.activation_bar_vector_2.copy(),
                               metadata={
                                 "lrf_trust_of_new": get_metadata_for_lr_function(spicenet_hcm.get_trust_of_new_lrf()),
                                 "lrf_weights": get_metadata_for_lr_function(spicenet_hcm.get_weights_lrf()),
@@ -188,6 +193,7 @@ def nir_to_som(nir_spicenet_som: nir.SPICEnetSOM, lrf_tuning_curve: LearningRate
     return spicenet_som
 
 def som_neuron_to_nir(spicenet_som_neuron: SpiceNetSom.SomNeuron) -> nir.SPICEnetSOMNeuron:
+    # creating new reference to avoid changing the original object
     return nir.SPICEnetSOMNeuron(np.array(spicenet_som_neuron.tuning_curve_width), np.array(spicenet_som_neuron.preferred_value))
 
 def nir_to_som_neuron(nir_spicenet_som_neuron: nir.SPICEnetSOMNeuron) -> SpiceNetSom.SomNeuron:
